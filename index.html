@@ -337,6 +337,34 @@ const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </head>
 <body>
 
+<!-- ===== SET PASSWORD (招待・パスワードリセット) ===== -->
+<div id="set-password-screen" style="display:none; min-height:100vh; align-items:center; justify-content:center; background:linear-gradient(135deg,#534AB7 0%,#3C3489 50%,#26215C 100%);">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+          <rect x="15" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+          <rect x="3" y="15" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+          <rect x="15" y="15" width="8" height="8" rx="2" fill="white" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="login-logo-name">Securitas</div>
+      <div class="login-logo-sub">パスワードを設定してアカウントを有効化</div>
+    </div>
+    <div class="login-field">
+      <label class="login-label">新しいパスワード</label>
+      <input class="login-input" type="password" id="sp-pw" placeholder="8文字以上" autocomplete="new-password">
+    </div>
+    <div class="login-field">
+      <label class="login-label">パスワード（確認）</label>
+      <input class="login-input" type="password" id="sp-pw2" placeholder="もう一度入力" autocomplete="new-password">
+    </div>
+    <button class="login-btn" onclick="setInvitePassword()">パスワードを設定してログイン</button>
+    <div class="login-err" id="sp-err"></div>
+  </div>
+</div>
+
 <!-- ===== LOGIN ===== -->
 <div id="login-screen">
   <div class="login-card">
@@ -3028,7 +3056,53 @@ async function loadAppState() {
   } catch(e) { console.error('読み込み失敗:', e); }
 }
 
-checkSession();
+// ============================================================
+// 招待・パスワードリセット処理
+// ============================================================
+async function checkInviteToken() {
+  const hash = window.location.hash;
+  const isInvite   = hash.includes('type=invite');
+  const isRecovery = hash.includes('type=recovery');
+
+  if (isInvite || isRecovery) {
+    // Supabase JS がトークンを自動処理 → セッションが生成される
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // ハッシュを消してブラウザ履歴をクリーン
+      history.replaceState(null, '', window.location.pathname);
+      document.getElementById('login-screen').style.display = 'none';
+      const sp = document.getElementById('set-password-screen');
+      sp.style.display = 'flex';
+      return;
+    }
+  }
+  await checkSession();
+}
+
+async function setInvitePassword() {
+  const pw  = document.getElementById('sp-pw').value;
+  const pw2 = document.getElementById('sp-pw2').value;
+  const err = document.getElementById('sp-err');
+  if (!pw || pw.length < 8) { err.textContent = '8文字以上のパスワードを入力してください'; return; }
+  if (pw !== pw2)            { err.textContent = 'パスワードが一致しません'; return; }
+  err.textContent = '設定中...';
+  const { error } = await supabase.auth.updateUser({ password: pw });
+  if (error) { err.textContent = 'エラー: ' + error.message; return; }
+  // プロファイル取得 → アプリ起動
+  const { data: { session } } = await supabase.auth.getSession();
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+  currentUser = {
+    id: session.user.email,
+    supabaseId: session.user.id,
+    displayName: profile?.display_name || session.user.email.split('@')[0],
+    dept: profile?.dept || '未設定',
+    role: profile?.role || 'user',
+  };
+  document.getElementById('set-password-screen').style.display = 'none';
+  bootApp();
+}
+
+checkInviteToken();
 </script>
 </body>
 </html>
