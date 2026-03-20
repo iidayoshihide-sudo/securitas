@@ -326,6 +326,14 @@ textarea { resize:vertical; min-height:64px; }
 .air-status-open { background:#E8EAF6; color:#283593; }
 .air-status-none { background:#F5F5F5; color:#9E9E9E; }
 </style>
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Supabase設定 (GitHub ActionsでCI/CDが注入)
+const SUPABASE_URL = '%%SUPABASE_URL%%';
+const SUPABASE_ANON_KEY = '%%SUPABASE_ANON_KEY%%';
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
 </head>
 <body>
 
@@ -345,8 +353,8 @@ textarea { resize:vertical; min-height:64px; }
       <div class="login-logo-sub">ISMS / AIMS Portal</div>
     </div>
     <div class="login-field">
-      <label class="login-label">ユーザーID</label>
-      <input class="login-input" type="text" id="l-id" placeholder="例：admin" autocomplete="username">
+      <label class="login-label">メールアドレス</label>
+      <input class="login-input" type="email" id="l-id" placeholder="例：admin@example.com" autocomplete="email">
     </div>
     <div class="login-field">
       <label class="login-label">パスワード</label>
@@ -1171,41 +1179,32 @@ textarea { resize:vertical; min-height:64px; }
 
 <script>
 // ============================================================
-// AUTH
+// SUPABASE クライアント
 // ============================================================
-const DEFAULT_USERS = [
-  {id:'admin', displayName:'システム管理者', dept:'情報システム部', role:'admin', pwHash:hashPw('admin123')},
-  {id:'yamada', displayName:'山田 太郎', dept:'情報システム部', role:'user', pwHash:hashPw('user123')},
-  {id:'sato',   displayName:'佐藤 花子', dept:'人事部',          role:'user', pwHash:hashPw('user123')},
-];
+const supabase = _sb;
 
-function hashPw(pw) {
-  // Simple deterministic hash for demo (not cryptographically secure)
-  let h = 0x811c9dc5;
-  for (let i = 0; i < pw.length; i++) { h ^= pw.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
-  return h.toString(16).padStart(8,'0');
-}
-
-function loadUsers() {
-  const stored = localStorage.getItem('isms_users');
-  return stored ? JSON.parse(stored) : [...DEFAULT_USERS];
-}
-function saveUsers(users) { localStorage.setItem('isms_users', JSON.stringify(users)); }
-
-let USERS = loadUsers();
+// ============================================================
+// AUTH (Supabase Auth)
+// ============================================================
 let currentUser = null;
 
-function doLogin() {
-  const id = document.getElementById('l-id').value.trim();
+async function doLogin() {
+  const email = document.getElementById('l-id').value.trim();
   const pw = document.getElementById('l-pw').value;
   const err = document.getElementById('l-err');
-  if (!id || !pw) { err.textContent = 'IDとパスワードを入力してください'; return; }
-  USERS = loadUsers();
-  const user = USERS.find(u => u.id === id && u.pwHash === hashPw(pw));
-  if (!user) { err.textContent = 'IDまたはパスワードが正しくありません'; return; }
+  if (!email || !pw) { err.textContent = 'メールアドレスとパスワードを入力してください'; return; }
+  err.textContent = 'ログイン中...';
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  if (error) { err.textContent = 'メールアドレスまたはパスワードが正しくありません'; return; }
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+  currentUser = {
+    id: data.user.email,
+    supabaseId: data.user.id,
+    displayName: profile?.display_name || data.user.email.split('@')[0],
+    dept: profile?.dept || '未設定',
+    role: profile?.role || 'user',
+  };
   err.textContent = '';
-  currentUser = user;
-  localStorage.setItem('isms_session', JSON.stringify({id: user.id, ts: Date.now()}));
   bootApp();
 }
 
@@ -1213,9 +1212,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
 
-function doLogout() {
+async function doLogout() {
+  await supabase.auth.signOut();
   currentUser = null;
-  localStorage.removeItem('isms_session');
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('l-id').value = '';
@@ -1223,107 +1222,99 @@ function doLogout() {
   document.getElementById('l-err').textContent = '';
 }
 
-function checkSession() {
-  const s = localStorage.getItem('isms_session');
-  if (!s) return;
-  const {id, ts} = JSON.parse(s);
-  // 8-hour session
-  if (Date.now() - ts > 8 * 3600 * 1000) { localStorage.removeItem('isms_session'); return; }
-  USERS = loadUsers();
-  const user = USERS.find(u => u.id === id);
-  if (user) { currentUser = user; bootApp(); }
+async function checkSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+  currentUser = {
+    id: session.user.email,
+    supabaseId: session.user.id,
+    displayName: profile?.display_name || session.user.email.split('@')[0],
+    dept: profile?.dept || '未設定',
+    role: profile?.role || 'user',
+  };
+  bootApp();
 }
 
-function bootApp() {
+async function bootApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
-  // Sidebar user info
+  // サイドバーユーザー情報
   const av = document.getElementById('sb-avatar');
   av.textContent = (currentUser.displayName || currentUser.id).charAt(0).toUpperCase();
   document.getElementById('sb-name').textContent = currentUser.displayName || currentUser.id;
   document.getElementById('sb-role').textContent = currentUser.role === 'admin' ? '管理者' : '一般ユーザー';
-  // Show/hide admin items
+  // 管理者メニュー表示制御
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
   });
-  // Readonly notices for general users
+  // 一般ユーザー向け読み取り専用表示
   document.querySelectorAll('.readonly-notice').forEach(el => {
     el.style.display = currentUser.role !== 'admin' ? 'block' : 'none';
   });
   initApp();
+  await Promise.all([loadAppState(), loadUsers()]);
   renderUsers();
 }
 
 // ============================================================
-// USER MANAGEMENT
+// USER MANAGEMENT (Supabase)
 // ============================================================
+let USERS = [];
+
+async function loadUsers() {
+  const { data } = await supabase.from('profiles').select('*').order('display_name');
+  if (data) {
+    USERS = data.map(p => ({
+      id: p.id,
+      displayName: p.display_name || 'ユーザー',
+      dept: p.dept || '—',
+      role: p.role || 'user',
+    }));
+  }
+}
+
 function renderUsers() {
   const list = document.getElementById('user-list');
   if (!list) return;
-  USERS = loadUsers();
   list.innerHTML = USERS.map(u => `
     <div class="user-row">
-      <div class="ua">${(u.displayName||u.id).charAt(0).toUpperCase()}</div>
+      <div class="ua">${(u.displayName||'U').charAt(0).toUpperCase()}</div>
       <div class="u-info">
-        <div class="u-name-lg">${u.displayName || u.id} <span style="font-size:11px;color:var(--text3);">(@${u.id})</span></div>
-        <div class="u-meta">${u.dept || '—'} &nbsp;·&nbsp; <span class="badge ${u.role==='admin'?'b-admin':'b-user'}">${u.role==='admin'?'管理者':'一般ユーザー'}</span></div>
+        <div class="u-name-lg">${u.displayName} <span style="font-size:11px;color:var(--text3);">(${u.dept})</span></div>
+        <div class="u-meta"><span class="badge ${u.role==='admin'?'b-admin':'b-user'}">${u.role==='admin'?'管理者':'一般ユーザー'}</span></div>
       </div>
-      ${u.id !== currentUser.id ? `
-        <button class="btn btn-sm" onclick="toggleUserRole('${u.id}')">${u.role==='admin'?'一般に変更':'管理者に昇格'}</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">削除</button>
-      ` : `<span style="font-size:11px;color:var(--text3);">（自分）</span>`}
-    </div>`).join('');
+      ${u.id !== currentUser.supabaseId && currentUser.role === 'admin' ? `
+        <button class="btn btn-sm" onclick="toggleUserRole('${u.id}','${u.role}')">${u.role==='admin'?'一般に変更':'管理者に昇格'}</button>
+      ` : u.id === currentUser.supabaseId ? `<span style="font-size:11px;color:var(--text3);">（自分）</span>` : ''}
+    </div>`).join('') || '<div style="color:var(--text3);padding:16px;">ユーザーなし</div>';
 }
 
 function addUser() {
-  const id = document.getElementById('u-id').value.trim();
-  const disp = document.getElementById('u-disp').value.trim();
-  const dept = document.getElementById('u-dept').value.trim();
-  const role = document.getElementById('u-role').value;
-  const pw = document.getElementById('u-pw').value;
-  const pw2 = document.getElementById('u-pw2').value;
-  if (!id || !pw) { showToast('IDとパスワードは必須です'); return; }
-  if (pw !== pw2) { showToast('パスワードが一致しません'); return; }
-  USERS = loadUsers();
-  if (USERS.find(u => u.id === id)) { showToast('そのIDは既に使用されています'); return; }
-  USERS.push({id, displayName: disp||id, dept, role, pwHash: hashPw(pw)});
-  saveUsers(USERS);
-  toggleFP('u-add-form');
-  renderUsers();
-  showToast(`ユーザー「${disp||id}」を追加しました`);
+  showToast('ユーザー追加はSupabaseダッシュボードで行ってください（Authentication > Users > Invite user）');
 }
 
 function deleteUser(uid) {
-  if (!confirm(`ユーザー「${uid}」を削除しますか？`)) return;
-  USERS = loadUsers();
-  USERS = USERS.filter(u => u.id !== uid);
-  saveUsers(USERS);
-  renderUsers();
-  showToast('ユーザーを削除しました');
+  showToast('ユーザー削除はSupabaseダッシュボードで行ってください（Authentication > Users）');
 }
 
-function toggleUserRole(uid) {
-  USERS = loadUsers();
+async function toggleUserRole(uid, currentRole) {
+  if (currentUser.role !== 'admin') { showToast('管理者のみ権限を変更できます'); return; }
+  const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', uid);
+  if (error) { showToast('権限変更に失敗しました'); return; }
   const u = USERS.find(x => x.id === uid);
-  if (!u) return;
-  u.role = u.role === 'admin' ? 'user' : 'admin';
-  saveUsers(USERS);
-  renderUsers();
-  showToast(`${u.displayName} の権限を変更しました`);
+  if (u) { u.role = newRole; renderUsers(); }
+  showToast('権限を変更しました');
 }
 
-function changePassword() {
-  const old = document.getElementById('pw-old').value;
+async function changePassword() {
   const nw = document.getElementById('pw-new').value;
   const nw2 = document.getElementById('pw-new2').value;
-  if (!old || !nw) { showToast('全てのフィールドを入力してください'); return; }
+  if (!nw) { showToast('新しいパスワードを入力してください'); return; }
   if (nw !== nw2) { showToast('新しいパスワードが一致しません'); return; }
-  USERS = loadUsers();
-  const u = USERS.find(x => x.id === currentUser.id);
-  if (!u || u.pwHash !== hashPw(old)) { showToast('現在のパスワードが正しくありません'); return; }
-  u.pwHash = hashPw(nw);
-  saveUsers(USERS);
-  currentUser = u;
+  const { error } = await supabase.auth.updateUser({ password: nw });
+  if (error) { showToast('パスワード変更に失敗しました: ' + error.message); return; }
   document.getElementById('pw-old').value = '';
   document.getElementById('pw-new').value = '';
   document.getElementById('pw-new2').value = '';
@@ -1539,7 +1530,7 @@ function toggleDrawer(id) {
 }
 function setRespSt(rId,respId,st) {
   const r=risks.find(x=>x.id===rId); const resp=r?.responses?.find(x=>x.id===respId); if(!resp)return;
-  resp.status=st; openDrawers.add(rId); renderRisks(); updateMetrics();
+  resp.status=st; openDrawers.add(rId); renderRisks(); updateMetrics(); queueSave();
   showToast({done:'実施済みに設定しました',hold:'保留中に設定しました',reject:'却下に設定しました'}[st]);
 }
 function submitResp(rId) {
@@ -1547,11 +1538,11 @@ function submitResp(rId) {
   const r=risks.find(x=>x.id===rId); if(!r)return;
   r.responses=r.responses||[];
   r.responses.push({id:'r'+responseCounter++,name,desc:document.getElementById('rd-'+rId)?.value||'',status:document.getElementById('rs-'+rId)?.value||'none',note:document.getElementById('rm-'+rId)?.value||''});
-  openDrawers.add(rId); renderRisks(); updateMetrics(); showToast('リスク対応を追加しました');
+  openDrawers.add(rId); renderRisks(); updateMetrics(); showToast('リスク対応を追加しました'); queueSave();
 }
 function deleteResp(rId,respId) {
   const r=risks.find(x=>x.id===rId); if(!r)return;
-  r.responses=r.responses.filter(x=>x.id!==respId); openDrawers.add(rId); renderRisks(); updateMetrics();
+  r.responses=r.responses.filter(x=>x.id!==respId); openDrawers.add(rId); renderRisks(); updateMetrics(); queueSave();
 }
 function editNote(rId,respId) {
   const r=risks.find(x=>x.id===rId); const resp=r?.responses?.find(x=>x.id===respId); if(!resp)return;
@@ -1620,12 +1611,12 @@ function adoptOne(tid){
   const id='R-'+String(riskCounter++).padStart(3,'0');
   risks.push({id,name:p.name,assetId:p.assetId,assetName:p.assetName,cia:p.cia,cat:'技術',impact:p.impact,prob:p.prob,source:'proposed',responses:[{id:'r'+responseCounter++,name:p.action,desc:'自動提案からの初期対応策',status:'none',note:''}]});
   proposedRisks=proposedRisks.filter(x=>x.tid!==tid);
-  renderProposals();renderRisks();renderAssets();showToast('リスクを採用しました');
+  renderProposals();renderRisks();renderAssets();showToast('リスクを採用しました');queueSave();
 }
 function rejectOne(tid){proposedRisks=proposedRisks.filter(x=>x.tid!==tid);renderProposals();updatePendingBadge();}
 function adoptAll(){
   proposedRisks.forEach(p=>{const id='R-'+String(riskCounter++).padStart(3,'0');risks.push({id,name:p.name,assetId:p.assetId,assetName:p.assetName,cia:p.cia,cat:'技術',impact:p.impact,prob:p.prob,source:'proposed',responses:[{id:'r'+responseCounter++,name:p.action,desc:'自動提案からの初期対応策',status:'none',note:''}]});});
-  proposedRisks=[];renderProposals();renderRisks();renderAssets();showToast('すべて採用しました');
+  proposedRisks=[];renderProposals();renderRisks();renderAssets();showToast('すべて採用しました');queueSave();
 }
 function rejectAll(){proposedRisks=[];renderProposals();updatePendingBadge();}
 
@@ -1699,7 +1690,7 @@ function submitAsset(){
   const name=document.getElementById('a-name').value.trim();if(!name)return;
   const cat=document.getElementById('a-cat').value;
   const a={id:'A-'+String(assets.length+1).padStart(3,'0'),name,cat,cls:document.getElementById('a-cls').value,dept:document.getElementById('a-dept').value||'未設定',owner:document.getElementById('a-owner').value||'未設定',loc:document.getElementById('a-loc').value||'未設定',desc:document.getElementById('a-desc').value||''};
-  assets.unshift(a);filteredAssets=[...assets];toggleFP('af');renderAssets();openModal(a.id);
+  assets.unshift(a);filteredAssets=[...assets];toggleFP('af');renderAssets();openModal(a.id);queueSave();
 }
 function addRiskManual(){
   const name=document.getElementById('rn').value.trim();if(!name)return;
@@ -1707,7 +1698,7 @@ function addRiskManual(){
   const assetId=sel.value||null,assetName=sel.value?(assets.find(a=>a.id===sel.value)?.name||'—'):'—';
   const id='R-'+String(riskCounter++).padStart(3,'0');
   risks.push({id,name,assetId,assetName,cia:document.getElementById('r-cia').value,cat:document.getElementById('r-cat').value,impact:parseInt(document.getElementById('r-imp').value)||3,prob:parseInt(document.getElementById('r-prb').value)||3,source:'manual',responses:[{id:'r'+responseCounter++,name:document.getElementById('r-act').value||'対応策を検討',desc:'初期登録時の対応策',status:'none',note:''}]});
-  toggleFP('r-add-form');renderRisks();renderAssets();showToast('リスクを追加しました');
+  toggleFP('r-add-form');renderRisks();renderAssets();showToast('リスクを追加しました');queueSave();
 }
 function populateAsel(){
   const sel=document.getElementById('r-asel');
@@ -2099,7 +2090,11 @@ function auditSummary() { genAuditReport(); }
 // CLAUDE API
 // ============================================================
 async function callClaude(p){
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'あなたはISMS専門家です。ISO 27001に基づき、簡潔で実用的なアドバイスを日本語200字以内で提供してください。',messages:[{role:'user',content:p}]})});const d=await r.json();return d.content?.[0]?.text||'エラーが発生しました';}catch(e){return 'API接続エラー: '+e.message;}
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    const r=await fetch(`${SUPABASE_URL}/functions/v1/claude-proxy`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session?.access_token}`},body:JSON.stringify({prompt:p,maxTokens:1000})});
+    const d=await r.json();return d.text||'エラーが発生しました';
+  }catch(e){return 'API接続エラー: '+e.message;}
 }
 function setL(id){const e=document.getElementById(id);if(!e)return;e.style.display='block';e.innerHTML='<div class="ai-lbl">Claude 分析中...</div><span style="color:#bbb;font-style:italic;">分析しています...</span>';}
 function setR(id,t){const e=document.getElementById(id);if(!e)return;e.innerHTML=`<div class="ai-lbl">Claude 分析結果</div><div>${t}</div>`;}
@@ -2389,7 +2384,11 @@ function showEduTab(tab){
 function closeEduModal(id){ document.getElementById(id).classList.remove('open'); }
 
 async function callClaudeLong(p){
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:'あなたはISMS・AIMS専門家です。指示された形式で正確に回答してください。',messages:[{role:'user',content:p}]})});const d=await r.json();return d.content?.[0]?.text||'エラー';}catch(e){return 'API接続エラー: '+e.message;}
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    const r=await fetch(`${SUPABASE_URL}/functions/v1/claude-proxy`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session?.access_token}`},body:JSON.stringify({prompt:p,maxTokens:2000})});
+    const d=await r.json();return d.text||'エラー';
+  }catch(e){return 'API接続エラー: '+e.message;}
 }
 
 // ============================================================
@@ -2822,7 +2821,7 @@ function submitAIS() {
   };
   aiSystems.unshift(sys);
   toggleFP('ais-form');
-  renderAIS(); renderAIIA(); populateAirSysSel();
+  renderAIS(); renderAIIA(); populateAirSysSel(); queueSave();
   // AI評価
   const box = document.getElementById('ai-ais');
   box.style.display = 'block';
@@ -2835,7 +2834,7 @@ function deleteAIS(id) {
   if(!confirm('このAIシステムを削除しますか？'))return;
   aiSystems = aiSystems.filter(s=>s.id!==id);
   aiRisks = aiRisks.filter(r=>r.sysId!==id);
-  renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
+  renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel(); queueSave();
 }
 
 async function aiEvalSystem(id) {
@@ -2893,7 +2892,7 @@ function renderAIIACard(s) {
 function setAIIAScore(sysId, axId, score) {
   const s = aiSystems.find(x=>x.id===sysId); if(!s)return;
   s.aiia[axId] = s.aiia[axId]===score ? 'none' : score;
-  renderAIIA();
+  renderAIIA(); queueSave();
   setTimeout(()=>scrollToAIIA(sysId),20);
 }
 
@@ -2906,7 +2905,7 @@ function completeAIIA(id) {
   const s = aiSystems.find(x=>x.id===id); if(!s)return;
   s.assessed = true;
   showToast(`「${s.name}」の影響評価を完了しました`);
-  renderAIS(); renderAIIA();
+  renderAIS(); renderAIIA(); queueSave();
   setTimeout(()=>scrollToAIIA(id),20);
 }
 
@@ -2958,7 +2957,7 @@ function toggleAIRiskStatus(id) {
   const r = aiRisks.find(x=>x.id===id); if(!r)return;
   r.status = r.status==='done'?'open':'done';
   renderAIRisk();
-  showToast(r.status==='done'?'対応済みに設定しました':'未対応に戻しました');
+  showToast(r.status==='done'?'対応済みに設定しました':'未対応に戻しました'); queueSave();
 }
 
 function addAIRisk() {
@@ -2967,7 +2966,7 @@ function addAIRisk() {
   const sysId = sel.value||null, sysName = sel.value?(aiSystems.find(s=>s.id===sel.value)?.name||'—'):'—';
   const id = 'AR-'+String(aiRiskCounter++).padStart(3,'0');
   aiRisks.push({id, name, sysId, sysName, cat:document.getElementById('air-cat').value, principle:document.getElementById('air-principle').value, impact:parseInt(document.getElementById('air-imp').value)||3, prob:parseInt(document.getElementById('air-prb').value)||3, action:document.getElementById('air-act').value||'対応策を検討', status:'open'});
-  toggleFP('air-form'); renderAIRisk(); showToast('AIリスクを追加しました');
+  toggleFP('air-form'); renderAIRisk(); showToast('AIリスクを追加しました'); queueSave();
 }
 
 async function analyzeAIRisk(id) {
@@ -2989,6 +2988,46 @@ function populateAirSysSel() {
   const sel = document.getElementById('air-sys-sel'); if(!sel)return;
   sel.innerHTML = '<option value="">（AIシステムを選択）</option>'+aiSystems.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
+// ============================================================
+// データ永続化 (Supabase org_data)
+// ============================================================
+let _saveTimer = null;
+function queueSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveAppState, 1500);
+}
+
+async function saveAppState() {
+  if (!currentUser) return;
+  try {
+    const state = {
+      assets, risks, riskCounter, responseCounter,
+      aiSystems, aiRisks, aiRiskCounter, aiSysCounter,
+    };
+    await supabase.from('org_data').upsert({
+      key: 'app_state',
+      value: state,
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser.supabaseId,
+    });
+  } catch(e) { console.error('保存失敗:', e); }
+}
+
+async function loadAppState() {
+  try {
+    const { data } = await supabase.from('org_data').select('value').eq('key','app_state').single();
+    if (!data?.value) return;
+    const s = data.value;
+    if (s.assets?.length)    { assets = s.assets; filteredAssets = [...assets]; }
+    if (s.risks?.length)     { risks = s.risks; riskCounter = s.riskCounter || 6; responseCounter = s.responseCounter || 200; }
+    if (s.aiSystems?.length) { aiSystems = s.aiSystems; aiSysCounter = s.aiSysCounter || 4; }
+    if (s.aiRisks?.length)   { aiRisks = s.aiRisks; aiRiskCounter = s.aiRiskCounter || 4; }
+    // 再描画
+    renderAssets(); updateMetrics(); renderRisks();
+    renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
+  } catch(e) { console.error('読み込み失敗:', e); }
+}
+
 checkSession();
 </script>
 </body>
