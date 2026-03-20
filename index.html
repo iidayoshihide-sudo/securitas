@@ -1,0 +1,2995 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Securitas | ISMS / AIMS Portal</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f5f5f3; --surface:#fff; --surface2:#f0f0ee;
+  --border:rgba(0,0,0,0.1); --border2:rgba(0,0,0,0.2);
+  --text:#1a1a1a; --text2:#555; --text3:#999;
+  --accent:#534AB7; --accent-bg:#EEEDFE;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+}
+body { font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif; background:var(--bg); color:var(--text); font-size:13px; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#534AB7 0%,#3C3489 50%,#26215C 100%);
+}
+.login-card {
+  background:#fff; border-radius:16px; padding:40px 36px; width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.login-logo { text-align:center; margin-bottom:28px; }
+.login-logo-icon {
+  width:52px; height:52px; background:var(--accent); border-radius:12px;
+  display:inline-flex; align-items:center; justify-content:center; margin-bottom:10px;
+}
+.login-logo-name { font-size:20px; font-weight:700; color:var(--accent); letter-spacing:-0.02em; }
+.login-logo-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+.login-field { margin-bottom:14px; }
+.login-label { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:4px; display:block; }
+.login-input {
+  width:100%; padding:10px 12px; border:1px solid var(--border2);
+  border-radius:var(--r-sm); font-size:13px; font-family:inherit;
+  color:var(--text); outline:none; transition:border 0.15s;
+}
+.login-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(83,74,183,0.12); }
+.login-btn {
+  width:100%; padding:11px; background:var(--accent); color:#fff; border:none;
+  border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer;
+  font-family:inherit; margin-top:6px; transition:background 0.15s;
+}
+.login-btn:hover { background:#3C3489; }
+.login-err { color:#C0392B; font-size:12px; margin-top:8px; text-align:center; min-height:18px; }
+.login-hint { font-size:11px; color:var(--text3); text-align:center; margin-top:16px; }
+.login-hint strong { color:var(--accent); }
+
+/* ===== APP ===== */
+#app-screen { display:none; }
+.app { display:flex; height:100vh; }
+.sidebar { width:200px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; }
+.sidebar-logo { padding:14px 16px 12px; border-bottom:1px solid var(--border); }
+.logo-name { font-size:13px; font-weight:700; color:var(--accent); }
+.logo-sub { font-size:10px; color:var(--text3); margin-top:1px; }
+.nav { flex:1; padding:8px 6px; overflow-y:auto; }
+.nav-lbl { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; padding:8px 8px 4px; }
+.ni { display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:var(--r-sm); cursor:pointer; color:var(--text2); font-size:12px; transition:all 0.12s; margin-bottom:1px; user-select:none; }
+.ni:hover { background:var(--surface2); color:var(--text); }
+.ni.active { background:var(--accent-bg); color:var(--accent); font-weight:600; }
+.ni svg { width:14px; height:14px; flex-shrink:0; }
+.ni.admin-only { display:none; }
+.nbadge { margin-left:auto; background:var(--accent); color:#fff; font-size:10px; font-weight:700; border-radius:99px; padding:1px 5px; min-width:16px; text-align:center; }
+/* User bar at sidebar bottom */
+.user-bar { border-top:1px solid var(--border); padding:10px 12px; display:flex; align-items:center; gap:8px; }
+.user-avatar { width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+.user-info { flex:1; min-width:0; }
+.user-name { font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-role { font-size:10px; color:var(--text3); }
+.logout-btn { background:none; border:none; cursor:pointer; color:var(--text3); padding:2px; border-radius:4px; }
+.logout-btn:hover { color:var(--text); background:var(--surface2); }
+/* Main */
+.main { flex:1; overflow-y:auto; }
+.mi { padding:24px; max-width:1100px; }
+.page { display:none; }
+.page.active { display:block; }
+.ph { margin-bottom:20px; }
+.pt { font-size:20px; font-weight:700; letter-spacing:-0.02em; }
+.ps { font-size:12px; color:var(--text3); margin-top:3px; }
+/* Metrics */
+.metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+.metric { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:14px 16px; }
+.mlb { font-size:11px; color:var(--text3); margin-bottom:4px; }
+.mv { font-size:26px; font-weight:700; line-height:1; }
+.red{color:#C0392B;} .amb{color:#D68910;} .grn{color:#1E8449;} .blu{color:#1A5276;} .pur{color:var(--accent);}
+/* Card */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; margin-bottom:14px; }
+.ch { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.ct { font-size:13px; font-weight:700; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+/* Table */
+.tbl { width:100%; border-collapse:collapse; font-size:12px; }
+.tbl th { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.04em; }
+.tbl td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:var(--surface2); }
+/* Badges */
+.badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:10px; font-weight:700; white-space:nowrap; }
+.b-secret{background:#FDECEA;color:#B71C1C;} .b-conf{background:#FFF3E0;color:#BF360C;}
+.b-internal{background:#E3F2FD;color:#0D47A1;} .b-public{background:#E8F5E9;color:#1B5E20;}
+.b-high{background:#FDECEA;color:#B71C1C;} .b-med{background:#FFF8E1;color:#F57F17;} .b-low{background:#E8F5E9;color:#1B5E20;}
+.b-open{background:#E8EAF6;color:#283593;} .b-done{background:#E8F5E9;color:#1B5E20;}
+.b-approved{background:#E8F5E9;color:#1B5E20;} .b-draft{background:#F5F5F5;color:#616161;} .b-review{background:#FFF8E1;color:#F57F17;}
+.b-prop{background:#F3E5F5;color:#6A1B9A;}
+.b-admin{background:#EDE7F6;color:#4527A0;} .b-user{background:#E8F5E9;color:#1B5E20;}
+.rs-done{background:#E8F5E9;color:#1B5E20;} .rs-hold{background:#FFF8E1;color:#F57F17;} .rs-reject{background:#F5F5F5;color:#616161;} .rs-none{background:#FAFAFA;color:#9E9E9E;border:1px solid #e0e0e0;}
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:5px; padding:6px 13px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--surface); cursor:pointer; font-size:12px; color:var(--text); font-family:inherit; transition:all 0.12s; }
+.btn:hover { background:var(--surface2); }
+.btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn-primary:hover { background:#3C3489; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-green { background:#1E8449; color:#fff; border-color:#1E8449; }
+.btn-green:hover { background:#166037; }
+.btn-danger { background:#C0392B; color:#fff; border-color:#C0392B; }
+.btn-danger:hover { background:#962d22; }
+.btn-ghost { background:none; border:none; cursor:pointer; color:var(--accent); font-size:11px; padding:2px 6px; border-radius:4px; font-family:inherit; }
+.btn-ghost:hover { background:var(--accent-bg); }
+.btn-reject { background:none; border:none; cursor:pointer; color:#999; font-size:11px; padding:2px 6px; border-radius:4px; font-family:inherit; }
+.btn-reject:hover { background:#f5f5f5; color:#555; }
+/* Response status buttons */
+.rs-btn { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid transparent; font-family:inherit; transition:all 0.12s; }
+.rs-btn.done{background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7;} .rs-btn.done:hover,.rs-btn.done.active{background:#1E8449;color:#fff;border-color:#1E8449;}
+.rs-btn.hold{background:#FFF8E1;color:#F57F17;border-color:#FFE082;} .rs-btn.hold:hover,.rs-btn.hold.active{background:#F57F17;color:#fff;border-color:#F57F17;}
+.rs-btn.reject{background:#F5F5F5;color:#757575;border-color:#E0E0E0;} .rs-btn.reject:hover,.rs-btn.reject.active{background:#757575;color:#fff;border-color:#757575;}
+/* AI box */
+.ai-box { background:#FAFAFA; border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:var(--r-sm); padding:11px 13px; margin-top:12px; font-size:12px; color:var(--text2); line-height:1.7; min-height:48px; }
+.ai-lbl { font-size:10px; font-weight:700; color:var(--accent); margin-bottom:5px; display:flex; align-items:center; gap:4px; }
+/* Forms */
+.fp { display:none; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r-md); padding:14px; margin-bottom:14px; }
+.ft { font-size:13px; font-weight:700; margin-bottom:12px; }
+.fg { margin-bottom:10px; }
+.fl { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:3px; display:block; }
+input[type=text],input[type=password],select,textarea { width:100%; padding:7px 9px; border:1px solid var(--border2); border-radius:var(--r-sm); background:var(--surface); color:var(--text); font-size:12px; font-family:inherit; outline:none; transition:border 0.1s; }
+input[type=text]:focus,input[type=password]:focus,select:focus,textarea:focus { border-color:var(--accent); }
+textarea { resize:vertical; min-height:64px; }
+/* Risk drawer */
+.risk-drawer { display:none; background:#FFFDF5; border:1px solid #FFE082; border-radius:var(--r-md); padding:16px; margin-top:-6px; margin-bottom:8px; }
+.risk-drawer.open { display:block; }
+.drawer-title { font-size:12px; font-weight:700; margin-bottom:12px; color:var(--text2); display:flex; align-items:center; justify-content:space-between; }
+.response-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:10px 12px; margin-bottom:8px; }
+.ri-head { display:flex; align-items:flex-start; gap:10px; }
+.ri-main { flex:1; }
+.ri-name { font-size:12px; font-weight:700; margin-bottom:2px; }
+.ri-desc { font-size:11px; color:var(--text2); line-height:1.6; margin-bottom:6px; }
+.ri-status-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.add-resp-btn { font-size:11px; color:var(--accent); background:none; border:1px dashed var(--accent); border-radius:var(--r-sm); padding:6px 12px; cursor:pointer; width:100%; text-align:center; font-family:inherit; margin-top:4px; }
+.add-resp-btn:hover { background:var(--accent-bg); }
+/* Filter */
+.fb { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+.fb select,.fb input[type=text] { width:auto; }
+.fb input[type=text] { width:160px; }
+/* Chart */
+.cr { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.cl2 { font-size:11px; color:var(--text2); flex-shrink:0; }
+.ct2 { flex:1; height:14px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.cf { height:100%; border-radius:3px; transition:width 0.5s; }
+.cc { font-size:11px; font-weight:700; min-width:20px; }
+/* Progress */
+.pr-row { display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+.pr-lbl { font-size:12px; flex:1; }
+.pr-cnt { font-size:11px; color:var(--text3); min-width:30px; text-align:right; }
+.pr-bar { height:5px; background:var(--surface2); border-radius:3px; overflow:hidden; margin-bottom:10px; }
+.pr-fill { height:100%; border-radius:3px; transition:width 0.3s; }
+/* Checklist */
+.ci { display:flex; align-items:flex-start; gap:9px; padding:8px 0; border-bottom:1px solid var(--border); }
+.ci:last-child { border-bottom:none; }
+.cb { width:15px; height:15px; flex-shrink:0; border:1.5px solid var(--border2); border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:1px; transition:all 0.1s; }
+.cb.checked { background:var(--accent); border-color:var(--accent); }
+.c-text { font-size:12px; line-height:1.5; }
+.c-text.done { text-decoration:line-through; color:var(--text3); }
+/* Proposal */
+.prop-banner { background:#F3E5F5; border:1px solid #CE93D8; border-radius:var(--r-md); padding:13px 16px; margin-bottom:14px; }
+.pb-title { font-size:13px; font-weight:700; color:#4A148C; margin-bottom:3px; }
+.pb-sub { font-size:11px; color:#7B1FA2; }
+.rp-item { border:1px solid var(--border); border-radius:var(--r-md); padding:12px 14px; margin-bottom:8px; transition:all 0.15s; }
+.rp-item.on { border-color:var(--accent); background:var(--accent-bg); }
+.rp-row { display:flex; align-items:flex-start; gap:10px; }
+.rp-chk { width:16px; height:16px; flex-shrink:0; border:1.5px solid var(--border2); border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:2px; transition:all 0.1s; }
+.rp-chk.on { background:var(--accent); border-color:var(--accent); }
+.rp-bd { flex:1; }
+.rp-name { font-size:13px; font-weight:700; margin-bottom:3px; }
+.rp-desc { font-size:11px; color:var(--text2); line-height:1.6; }
+.rp-tags { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; }
+.rp-tag { font-size:10px; padding:2px 7px; border-radius:99px; font-weight:600; }
+.tag-cia{background:#EDE7F6;color:#4527A0;} .tag-act{background:#E3F2FD;color:#0D47A1;} .tag-iso{background:#F1F8E9;color:#33691E;}
+.tag { display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px; background:var(--surface2); border:1px solid var(--border); color:var(--text2); }
+.linked-chip { display:inline-flex; align-items:center; gap:3px; font-size:10px; padding:2px 7px; border-radius:99px; background:#F3E5F5; color:#6A1B9A; cursor:pointer; font-weight:600; }
+.linked-chip:hover { background:#E1BEE7; }
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; display:none; align-items:center; justify-content:center; }
+.modal-bg.open { display:flex; }
+.modal { background:var(--surface); border-radius:var(--r-lg); width:700px; max-width:94vw; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.18); }
+.mh { padding:18px 20px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.m-title { font-size:15px; font-weight:700; }
+.m-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+.m-body { overflow-y:auto; padding:16px 20px; flex:1; }
+.m-foot { padding:13px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.m-foot-info { font-size:11px; color:var(--text3); }
+/* User management */
+.user-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.user-row:last-child { border-bottom:none; }
+.ua { width:36px; height:36px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+.u-info { flex:1; }
+.u-name-lg { font-size:13px; font-weight:700; }
+.u-meta { font-size:11px; color:var(--text3); margin-top:1px; }
+/* Read-only indicator */
+.readonly-notice { background:#FFF8E1; border:1px solid #FFE082; border-radius:var(--r-sm); padding:8px 12px; font-size:11px; color:#F57F17; margin-bottom:12px; display:none; }
+/* Toast */
+.toast { position:fixed; bottom:24px; right:24px; background:#1a1a1a; color:#fff; padding:10px 16px; border-radius:var(--r-md); font-size:12px; z-index:999; opacity:0; transform:translateY(8px); transition:all 0.25s; pointer-events:none; }
+.toast.show { opacity:1; transform:translateY(0); }
+/* Audit */
+.dept-audit-card { border:1px solid var(--border); border-radius:var(--r-md); margin-bottom:10px; overflow:hidden; }
+.dept-audit-head { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--surface); cursor:pointer; transition:background 0.12s; }
+.dept-audit-head:hover { background:var(--surface2); }
+.dept-status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dept-info { flex:1; }
+.dept-name { font-size:13px; font-weight:700; }
+.dept-meta { font-size:11px; color:var(--text3); margin-top:1px; }
+.dept-prog-wrap { display:flex; align-items:center; gap:8px; width:200px; flex-shrink:0; }
+.dept-prog-bar { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; border:1px solid var(--border); }
+.dept-prog-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+.dept-prog-txt { font-size:11px; font-weight:700; min-width:32px; text-align:right; }
+.dept-audit-body { display:none; border-top:1px solid var(--border); padding:14px 14px 10px; background:#FFFDF5; }
+.dept-audit-body.open { display:block; }
+.audit-check-row { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+.audit-check-row:last-child { border-bottom:none; }
+.ac-result { display:flex; gap:4px; flex-shrink:0; margin-top:1px; }
+.ac-btn { padding:2px 8px; border-radius:99px; font-size:10px; font-weight:700; cursor:pointer; border:1.5px solid transparent; font-family:inherit; transition:all 0.1s; }
+.ac-btn.ok { background:#E8F5E9; color:#1B5E20; border-color:#A5D6A7; }
+.ac-btn.ok.active, .ac-btn.ok:hover { background:#1E8449; color:#fff; border-color:#1E8449; }
+.ac-btn.ng { background:#FDECEA; color:#B71C1C; border-color:#EF9A9A; }
+.ac-btn.ng.active, .ac-btn.ng:hover { background:#C0392B; color:#fff; border-color:#C0392B; }
+.ac-btn.na { background:#F5F5F5; color:#757575; border-color:#E0E0E0; }
+.ac-btn.na.active, .ac-btn.na:hover { background:#757575; color:#fff; border-color:#757575; }
+.ac-label { flex:1; font-size:12px; line-height:1.5; }
+.ac-iso { font-size:10px; color:var(--text3); }
+.ac-note-input { font-size:11px; border:1px solid var(--border); border-radius:4px; padding:3px 7px; width:200px; background:var(--surface); color:var(--text); font-family:inherit; }
+.ac-note-input:focus { border-color:var(--accent); outline:none; }
+.result-ok { color:#1E8449; font-weight:700; }
+.result-ng { color:#C0392B; font-weight:700; }
+.result-na { color:#9E9E9E; font-weight:700; }
+/* Education */
+.edu-tab-btn { padding:7px 14px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-size:12px; font-weight:600; color:var(--text3); font-family:inherit; transition:all 0.12s; }
+.edu-tab-btn:hover { color:var(--text); }
+.edu-tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.prog-card { border:1px solid var(--border); border-radius:var(--r-md); padding:14px 16px; margin-bottom:10px; transition:border-color 0.12s; }
+.prog-card:hover { border-color:var(--accent); }
+.prog-header { display:flex; align-items:flex-start; gap:12px; }
+.prog-icon { width:40px; height:40px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.prog-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+.prog-meta { font-size:11px; color:var(--text3); }
+.prog-rate-bar { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; margin-top:8px; }
+.prog-rate-fill { height:100%; border-radius:3px; background:var(--accent); transition:width 0.4s; }
+.cert-badge { display:inline-flex; align-items:center; gap:4px; background:linear-gradient(135deg,#f6d365,#fda085); color:#7B3F00; font-size:10px; font-weight:700; padding:3px 9px; border-radius:99px; }
+.test-q { border:1px solid var(--border); border-radius:var(--r-md); padding:14px 16px; margin-bottom:12px; }
+.test-q-text { font-size:13px; font-weight:600; margin-bottom:10px; line-height:1.5; }
+.test-option { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1.5px solid var(--border); border-radius:var(--r-sm); margin-bottom:6px; cursor:pointer; font-size:12px; transition:all 0.1s; }
+.test-option:hover { border-color:var(--accent); background:var(--accent-bg); }
+.test-option.selected { border-color:var(--accent); background:var(--accent-bg); }
+.test-option.correct { border-color:#1E8449; background:#E8F5E9; }
+.test-option.wrong { border-color:#C0392B; background:#FDECEA; }
+.el-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:18px 20px; margin-bottom:12px; }
+.el-section-title { font-size:14px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.el-section-num { width:24px; height:24px; background:var(--accent); color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.el-content { font-size:13px; line-height:1.8; color:var(--text2); white-space:pre-wrap; }
+.matrix-table { border-collapse:collapse; font-size:11px; min-width:100%; }
+.matrix-table th { padding:6px 10px; background:var(--surface2); border:1px solid var(--border); font-weight:600; white-space:nowrap; }
+.matrix-table td { padding:6px 10px; border:1px solid var(--border); text-align:center; }
+.matrix-ok { background:#E8F5E9; color:#1B5E20; font-weight:700; }
+.matrix-ng { background:#FDECEA; color:#B71C1C; font-weight:700; }
+.matrix-na { background:#F5F5F5; color:#9E9E9E; }
+</style>
+.mr-tab { padding:9px 14px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-size:12px; font-weight:600; color:var(--text3); font-family:inherit; transition:all 0.12s; }
+.mr-tab:hover { color:var(--text); }
+.mr-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.mr-tab-pane { display:none; }
+.mr-tab-pane.active { display:block; }
+.mr-input-row { border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px; margin-bottom:8px; background:var(--surface); }
+.mr-input-label { font-size:12px; font-weight:700; margin-bottom:4px; }
+.mr-input-desc { font-size:11px; color:var(--text3); margin-bottom:8px; line-height:1.5; }
+.mr-eval-btns { display:flex; gap:4px; margin-bottom:6px; }
+.mr-eval-btn { padding:3px 10px; border-radius:99px; font-size:10px; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:var(--surface2); color:var(--text2); font-family:inherit; transition:all 0.1s; }
+.mr-eval-btn.good.active { background:#1E8449; color:#fff; border-color:#1E8449; }
+.mr-eval-btn.warn.active { background:#F57F17; color:#fff; border-color:#F57F17; }
+.mr-eval-btn.bad.active  { background:#C0392B; color:#fff; border-color:#C0392B; }
+.mr-note { font-size:11px; border:1px solid var(--border); border-radius:4px; padding:4px 8px; width:100%; background:var(--surface); color:var(--text); font-family:inherit; margin-top:4px; resize:none; min-height:44px; }
+.mr-note:focus { border-color:var(--accent); outline:none; }
+.mr-output-row { border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px; margin-bottom:8px; background:var(--surface); display:flex; gap:10px; align-items:flex-start; }
+.mr-output-body { flex:1; }
+.mr-output-type { font-size:10px; font-weight:700; padding:2px 7px; border-radius:99px; margin-bottom:6px; display:inline-block; }
+.mr-type-decision { background:#EDE7F6; color:#4527A0; }
+.mr-type-improvement { background:#E3F2FD; color:#0D47A1; }
+.mr-type-resource { background:#E8F5E9; color:#1B5E20; }
+.mr-session-card { border:1px solid var(--border); border-radius:var(--r-md); padding:14px 16px; margin-bottom:10px; cursor:pointer; transition:all 0.12s; }
+.mr-session-card:hover { border-color:var(--accent); background:var(--accent-bg); }
+.mr-session-head { display:flex; align-items:center; gap:12px; }
+.mr-session-date { font-size:13px; font-weight:700; }
+.mr-session-meta { font-size:11px; color:var(--text3); }
+.mr-session-badges { display:flex; gap:6px; margin-left:auto; }
+.mr-status-complete { background:#E8F5E9; color:#1B5E20; }
+.mr-status-draft { background:#FFF8E1; color:#F57F17; }
+</style>
+.aims-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; }
+.risk-pill-low { background:#E8F5E9; color:#1B5E20; border:1px solid #A5D6A7; }
+.risk-pill-medium { background:#FFF8E1; color:#F57F17; border:1px solid #FFE082; }
+.risk-pill-high { background:#FDECEA; color:#B71C1C; border:1px solid #EF9A9A; }
+.risk-pill-unacceptable { background:#1a1a1a; color:#fff; border:1px solid #1a1a1a; }
+.personal-none { background:#F5F5F5; color:#757575; }
+.personal-limited { background:#FFF8E1; color:#F57F17; }
+.personal-yes { background:#FDECEA; color:#B71C1C; }
+.aiia-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px; margin-bottom:14px; }
+.aiia-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.aiia-sys-name { font-size:14px; font-weight:700; }
+.aiia-axis { margin-bottom:12px; }
+.aiia-axis-label { font-size:11px; font-weight:600; color:var(--text2); margin-bottom:6px; display:flex; justify-content:space-between; }
+.aiia-score-btns { display:flex; gap:4px; }
+.score-btn { padding:3px 10px; border-radius:99px; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:var(--surface2); color:var(--text2); font-family:inherit; transition:all 0.1s; }
+.score-btn.s1.active { background:#1E8449; color:#fff; border-color:#1E8449; }
+.score-btn.s2.active { background:#F57F17; color:#fff; border-color:#F57F17; }
+.score-btn.s3.active { background:#C0392B; color:#fff; border-color:#C0392B; }
+.air-status-done { background:#E8F5E9; color:#1B5E20; }
+.air-status-open { background:#E8EAF6; color:#283593; }
+.air-status-none { background:#F5F5F5; color:#9E9E9E; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+          <rect x="15" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+          <rect x="3" y="15" width="8" height="8" rx="2" fill="white" opacity="0.45"/>
+          <rect x="15" y="15" width="8" height="8" rx="2" fill="white" opacity="0.45"/>
+        </svg>
+      </div>
+      <div class="login-logo-name">Securitas</div>
+      <div class="login-logo-sub">ISMS / AIMS Portal</div>
+    </div>
+    <div class="login-field">
+      <label class="login-label">ユーザーID</label>
+      <input class="login-input" type="text" id="l-id" placeholder="例：admin" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-label">パスワード</label>
+      <input class="login-input" type="password" id="l-pw" placeholder="パスワードを入力" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="l-err"></div>
+    <div class="login-hint">
+      初期アカウント：<strong>admin</strong> / <strong>admin123</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app-screen">
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">Securitas</div>
+      <div class="logo-sub">ISMS / AIMS Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-lbl">メニュー</div>
+      <div class="ni active" data-page="dashboard" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.2" fill="currentColor" opacity="0.9"/><rect x="9" y="1" width="6" height="6" rx="1.2" fill="currentColor" opacity="0.9"/><rect x="1" y="9" width="6" height="6" rx="1.2" fill="currentColor" opacity="0.4"/><rect x="9" y="9" width="6" height="6" rx="1.2" fill="currentColor" opacity="0.4"/></svg>
+        ダッシュボード
+      </div>
+      <div class="ni" data-page="assets" onclick="showPage('assets',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.2" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="2" y1="6.5" x2="14" y2="6.5" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="9.5" r="1" fill="currentColor"/><circle cx="8" cy="9.5" r="1" fill="currentColor"/><circle cx="11" cy="9.5" r="1" fill="currentColor"/></svg>
+        情報資産台帳
+      </div>
+      <div class="ni" data-page="risk" onclick="showPage('risk',this)">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 13H2L8 2Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><line x1="8" y1="6" x2="8" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/></svg>
+        リスク管理
+        <span class="nbadge" id="pending-badge" style="display:none">0</span>
+      </div>
+      <div class="ni" data-page="docs" onclick="showPage('docs',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="1.2" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="6" y1="5" x2="10" y2="5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="8" x2="10" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="11" x2="9" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        文書管理
+      </div>
+      <div class="ni" data-page="audit" onclick="showPage('audit',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1.2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        内部監査
+      </div>
+      <div class="ni" data-page="incident" onclick="showPage('incident',this)">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="8" y1="5" x2="8" y2="8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/></svg>
+        インシデント
+      </div>
+      <div class="ni" data-page="mgmt-review" onclick="showPage('mgmt-review',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.2" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="5" y1="11" x2="8" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="11" cy="11.5" r="2" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M12.5 13l1 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        マネジメントレビュー
+      </div>
+      <div class="ni" data-page="education" onclick="showPage('education',this)">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5.5V9C14 12 11 14 8 15C5 14 2 12 2 9V5.5L8 2Z" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        教育・研修
+      </div>
+      <div class="nav-lbl" style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+        <span style="background:#E8F5E9;color:#1B5E20;padding:1px 6px;border-radius:3px;font-size:9px;margin-right:4px;">NEW</span>AIMS
+      </div>
+      <div class="ni" data-page="ai-systems" onclick="showPage('ai-systems',this)">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="2" r="1" fill="currentColor"/><circle cx="14" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="14" r="1" fill="currentColor"/><circle cx="2" cy="8" r="1" fill="currentColor"/></svg>
+        AIシステム台帳
+      </div>
+      <div class="ni" data-page="ai-impact" onclick="showPage('ai-impact',this)">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 12L6 7l3 3 2-4 3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="13" cy="3" r="2" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+        AI影響評価
+      </div>
+      <div class="ni" data-page="ai-risk" onclick="showPage('ai-risk',this)">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 13H2L8 2Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><line x1="8" y1="6" x2="8" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/></svg>
+        AIリスク管理
+      </div>
+      <div class="nav-lbl" style="margin-top:8px;">管理者</div>
+      <div class="ni admin-only" data-page="users" onclick="showPage('users',this)">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 13c0-3 2-4 5-4s5 1 5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/><line x1="12" y1="7" x2="12" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        ユーザー管理
+      </div>
+    </nav>
+    <div class="user-bar">
+      <div class="user-avatar" id="sb-avatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="sb-name">—</div>
+        <div class="user-role" id="sb-role">—</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="ログアウト">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M10 5l3 3-3 3M13 8H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="mi">
+
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="ph"><div class="pt">ダッシュボード</div><div class="ps">ISMS管理状況の概要</div></div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">登録資産数</div><div class="mv pur" id="d-assets">10</div></div>
+          <div class="metric"><div class="mlb">リスク総数</div><div class="mv red" id="d-risks">5</div></div>
+          <div class="metric"><div class="mlb">対応未決リスク</div><div class="mv amb" id="d-noaction">0</div></div>
+          <div class="metric"><div class="mlb">対応完了率</div><div class="mv grn" id="d-done-rate">0%</div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="ct" style="margin-bottom:12px;">資産 機密区分</div><div id="d-chart"></div></div>
+          <div class="card"><div class="ct" style="margin-bottom:12px;">リスク対応状況</div><div id="d-resp-chart"></div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">AIによる総合評価</div><button class="btn btn-primary btn-sm" onclick="analyzeOverall()">Claude で分析</button></div>
+          <div class="ai-box" id="ai-dashboard"><span style="color:#bbb;font-style:italic;">ボタンを押すとAIがISMS状況を分析します</span></div>
+        </div>
+      </div>
+
+      <!-- Assets -->
+      <div class="page" id="page-assets">
+        <div class="ph"><div class="pt">情報資産台帳</div><div class="ps">資産を登録するとカテゴリに基づいてリスクが自動提案されます</div></div>
+        <div class="readonly-notice" id="ro-assets">👁 閲覧専用モード：一般ユーザーは資産の閲覧のみ可能です</div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">総資産数</div><div class="mv pur" id="a-total">10</div></div>
+          <div class="metric"><div class="mlb">極秘・機密</div><div class="mv red" id="a-crit">0</div></div>
+          <div class="metric"><div class="mlb">社外秘</div><div class="mv amb" id="a-int">0</div></div>
+          <div class="metric"><div class="mlb">リスク紐づき済み</div><div class="mv grn" id="a-linked">0</div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">資産一覧</div><button class="btn btn-primary btn-sm admin-only" onclick="toggleFP('af')">＋ 新規登録</button></div>
+          <div class="fp" id="af">
+            <div class="ft">資産の新規登録</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">資産名</label><input type="text" id="a-name" placeholder="例：顧客データベース"></div>
+              <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat"><option>情報・データ</option><option>ソフトウェア</option><option>ハードウェア</option><option>ネットワーク</option><option>人員・スキル</option><option>施設・設備</option></select></div>
+              <div class="fg"><label class="fl">機密区分</label><select id="a-cls"><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select></div>
+              <div class="fg"><label class="fl">管理部門</label><input type="text" id="a-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">管理担当者</label><input type="text" id="a-owner" placeholder="例：山田 太郎"></div>
+              <div class="fg"><label class="fl">保管場所</label><input type="text" id="a-loc" placeholder="例：AWS / 社内サーバー室"></div>
+            </div>
+            <div class="fg"><label class="fl">概要・用途</label><textarea id="a-desc"></textarea></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button class="btn btn-primary btn-sm" onclick="submitAsset()">登録してリスクを自動提案 →</button>
+              <button class="btn btn-sm" onclick="toggleFP('af')">キャンセル</button>
+            </div>
+          </div>
+          <div class="fb">
+            <select id="f-cat" onchange="filterA()"><option value="">カテゴリ: すべて</option><option>情報・データ</option><option>ソフトウェア</option><option>ハードウェア</option><option>ネットワーク</option><option>人員・スキル</option><option>施設・設備</option></select>
+            <select id="f-cls" onchange="filterA()"><option value="">機密区分: すべて</option><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select>
+            <input type="text" id="f-q" placeholder="資産名で検索..." oninput="filterA()">
+          </div>
+          <table class="tbl"><thead><tr><th>ID</th><th>資産名</th><th>カテゴリ</th><th>機密区分</th><th>管理部門</th><th>管理担当者</th><th>保管場所</th><th>紐づきリスク</th><th></th></tr></thead><tbody id="a-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- Risk -->
+      <div class="page" id="page-risk">
+        <div class="ph"><div class="pt">リスク管理</div><div class="ps">▸ でリスクを展開するとリスク対応の登録・判断（実施済み／保留中／却下）ができます</div></div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">リスク総数</div><div class="mv red" id="r-total">5</div></div>
+          <div class="metric"><div class="mlb">高リスク</div><div class="mv red" id="r-high">0</div></div>
+          <div class="metric"><div class="mlb">提案待ち</div><div class="mv amb" id="r-pend">0</div></div>
+          <div class="metric"><div class="mlb">対応完了</div><div class="mv grn" id="r-done-cnt">0</div></div>
+        </div>
+        <div id="prop-sec" style="display:none;">
+          <div class="prop-banner"><div class="pb-title">自動提案リスク — 採用・非採用を選択してください</div><div class="pb-sub">資産カテゴリに基づき ISO 27001 付属書Aの管理策に関連したリスクを提案しています</div></div>
+          <div class="card" style="border-color:#CE93D8;">
+            <div class="ch"><div class="ct">提案リスク <span id="prop-cnt" style="font-size:11px;font-weight:400;color:var(--text3);"></span></div><div style="display:flex;gap:6px;"><button class="btn btn-sm" onclick="rejectAll()">すべて非採用</button><button class="btn btn-green btn-sm" onclick="adoptAll()">すべて採用</button></div></div>
+            <div id="prop-list"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">リスク台帳</div><button class="btn btn-primary btn-sm" onclick="toggleFP('r-add-form')">＋ 手動追加</button></div>
+          <div class="fp" id="r-add-form">
+            <div class="ft">リスクの手動追加</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">リスク名</label><input type="text" id="rn" placeholder="例：外部委託先の情報漏洩"></div>
+              <div class="fg"><label class="fl">関連資産</label><select id="r-asel"></select></div>
+              <div class="fg"><label class="fl">CIA</label><select id="r-cia"><option>機密性</option><option>完全性</option><option>可用性</option></select></div>
+              <div class="fg"><label class="fl">カテゴリ</label><select id="r-cat"><option>技術</option><option>人的</option><option>組織</option><option>物理</option></select></div>
+              <div class="fg"><label class="fl">影響度 (1-5)</label><input type="text" id="r-imp" placeholder="4"></div>
+              <div class="fg"><label class="fl">可能性 (1-5)</label><input type="text" id="r-prb" placeholder="3"></div>
+            </div>
+            <div class="fg"><label class="fl">推奨対応策</label><input type="text" id="r-act" placeholder="例：定期的なセキュリティ監査の実施"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;"><button class="btn btn-primary btn-sm" onclick="addRiskManual()">追加</button><button class="btn btn-sm" onclick="toggleFP('r-add-form')">キャンセル</button></div>
+          </div>
+          <table class="tbl"><thead><tr><th></th><th>ID</th><th>リスク名</th><th>関連資産</th><th>CIA</th><th>影響度</th><th>可能性</th><th>レベル</th><th>リスク対応</th><th></th></tr></thead><tbody id="r-tbody"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">AIリスク評価アシスタント</div></div>
+          <div class="fg"><label class="fl">リスク内容を入力</label><textarea id="risk-input" placeholder="例：外部委託先がセキュリティ基準を満たしていない可能性がある"></textarea></div>
+          <button class="btn btn-primary btn-sm" onclick="assessRisk()">Claude で評価する</button>
+          <div class="ai-box" id="ai-risk"><span style="color:#bbb;font-style:italic;">リスク内容を入力してAI評価を実行してください</span></div>
+        </div>
+      </div>
+
+      <!-- Docs -->
+      <div class="page" id="page-docs">
+        <div class="ph"><div class="pt">文書管理・ポリシー</div><div class="ps">情報セキュリティポリシー・手順書の管理</div></div>
+        <div class="card">
+          <div class="ch"><div class="ct">文書一覧</div><button class="btn btn-primary btn-sm" onclick="draftDoc()">Claude で文書を下書き</button></div>
+          <table class="tbl"><thead><tr><th>文書ID</th><th>文書名</th><th>カテゴリ</th><th>版数</th><th>更新日</th><th>状態</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>P-001</td><td>情報セキュリティ基本方針</td><td>ポリシー</td><td>3.0</td><td>2025-01</td><td><span class="badge b-approved">承認済</span></td><td><button class="btn-ghost" onclick="reviewDoc('情報セキュリティ基本方針')">レビュー</button></td></tr>
+            <tr><td>P-002</td><td>アクセス管理手順書</td><td>手順書</td><td>2.1</td><td>2025-03</td><td><span class="badge b-approved">承認済</span></td><td><button class="btn-ghost" onclick="reviewDoc('アクセス管理手順書')">レビュー</button></td></tr>
+            <tr><td>P-003</td><td>インシデント対応手順</td><td>手順書</td><td>1.5</td><td>2025-11</td><td><span class="badge b-review">レビュー中</span></td><td><button class="btn-ghost" onclick="reviewDoc('インシデント対応手順')">レビュー</button></td></tr>
+            <tr><td>P-004</td><td>BCP計画書</td><td>計画書</td><td>2.0</td><td>2025-09</td><td><span class="badge b-draft">ドラフト</span></td><td><button class="btn-ghost" onclick="reviewDoc('BCP計画書')">レビュー</button></td></tr>
+          </tbody></table>
+          <div class="ai-box" id="ai-docs"><span style="color:#bbb;font-style:italic;">「Claude で文書を下書き」または「レビュー」でAIが支援します</span></div>
+        </div>
+      </div>
+
+      <!-- Audit -->
+      <div class="page" id="page-audit">
+        <div class="ph">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div class="pt">内部監査</div><div class="ps">年度・部署別の内部監査を管理します（ISO 27001 Clause 9.2）</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="audit-year-sel" onchange="onAuditYearChange()" style="width:110px;padding:6px 8px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;"></select>
+              <button class="btn btn-primary btn-sm admin-only" onclick="openNewAuditModal()">＋ 新規監査年度</button>
+            </div>
+          </div>
+        </div>
+        <!-- Year overview -->
+        <div id="audit-year-overview" style="display:none;">
+          <div class="metrics" id="audit-metrics-row"></div>
+          <!-- Department audit cards -->
+          <div class="card">
+            <div class="ch">
+              <div>
+                <div class="ct" id="audit-year-title">2026年度 内部監査</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="audit-year-meta"></div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm admin-only" onclick="openAddDeptModal()">＋ 部署を追加</button>
+                <button class="btn btn-primary btn-sm" onclick="genAuditReport()">Claude で監査報告書を生成</button>
+              </div>
+            </div>
+            <div id="dept-audit-list"></div>
+          </div>
+          <div class="ai-box" id="ai-audit" style="display:none;"></div>
+        </div>
+        <div id="audit-empty" style="text-align:center;padding:64px 0;color:var(--text3);">
+          <div style="font-size:32px;margin-bottom:12px;">📋</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">監査年度が登録されていません</div>
+          <div style="font-size:12px;margin-bottom:20px;">「＋ 新規監査年度」から今年度の内部監査を開始してください</div>
+          <button class="btn btn-primary admin-only" onclick="openNewAuditModal()">＋ 新規監査年度を作成</button>
+        </div>
+      </div>
+
+      <!-- Incident -->
+      <div class="page" id="page-incident">
+        <div class="ph"><div class="pt">インシデント管理</div><div class="ps">情報セキュリティインシデントの記録・対応・追跡</div></div>
+        <div class="card">
+          <div class="ch"><div class="ct">インシデント一覧</div><button class="btn btn-primary btn-sm" onclick="toggleFP('inc-form')">＋ 新規登録</button></div>
+          <div class="fp" id="inc-form">
+            <div class="g2">
+              <div class="fg"><label class="fl">件名</label><input type="text" id="inc-title" placeholder="インシデントの件名"></div>
+              <div class="fg"><label class="fl">カテゴリ</label><select id="inc-cat"><option>不正アクセス</option><option>マルウェア</option><option>情報漏洩</option><option>物理的セキュリティ</option><option>その他</option></select></div>
+            </div>
+            <div class="fg"><label class="fl">概要</label><textarea id="inc-desc"></textarea></div>
+            <div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="submitInc()">登録してAI対応手順を生成</button><button class="btn btn-sm" onclick="toggleFP('inc-form')">キャンセル</button></div>
+          </div>
+          <table class="tbl"><thead><tr><th>ID</th><th>件名</th><th>カテゴリ</th><th>発生日</th><th>状態</th><th>担当者</th><th></th></tr></thead>
+          <tbody id="inc-tbody">
+            <tr><td>INC-001</td><td>フィッシングメール大量受信</td><td>不正アクセス</td><td>2026-03-10</td><td><span class="badge b-open">対応中</span></td><td>山田</td><td><button class="btn-ghost" onclick="incAdvice('フィッシングメール大量受信：社員20名がクリックした可能性あり')">AI対応策</button></td></tr>
+            <tr><td>INC-002</td><td>不審な外部ログイン試行</td><td>不正アクセス</td><td>2026-03-12</td><td><span class="badge b-open">調査中</span></td><td>鈴木</td><td><button class="btn-ghost" onclick="incAdvice('不審な外部ログイン試行：海外IPからの大量ブルートフォース攻撃')">AI対応策</button></td></tr>
+            <tr><td>INC-003</td><td>USBデバイス紛失</td><td>物理的セキュリティ</td><td>2026-02-28</td><td><span class="badge b-done">完了</span></td><td>田中</td><td><button class="btn-ghost" onclick="incAdvice('USBデバイス紛失：暗号化済みUSBのため情報漏洩なし')">AI対応策</button></td></tr>
+          </tbody></table>
+          <div class="ai-box" id="ai-incident"><span style="color:#bbb;font-style:italic;">「AI対応策」または新規登録でインシデント対応手順を生成します</span></div>
+        </div>
+      </div>
+
+      <!-- User management (admin only) -->
+      <div class="page" id="page-users">
+        <div class="ph"><div class="pt">ユーザー管理</div><div class="ps">アカウントの追加・編集・削除（管理者専用）</div></div>
+        <div class="card">
+          <div class="ch"><div class="ct">ユーザー一覧</div><button class="btn btn-primary btn-sm" onclick="toggleFP('u-add-form')">＋ ユーザーを追加</button></div>
+          <div class="fp" id="u-add-form">
+            <div class="ft">新規ユーザーの追加</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">ユーザーID</label><input type="text" id="u-id" placeholder="例：tanaka"></div>
+              <div class="fg"><label class="fl">氏名</label><input type="text" id="u-disp" placeholder="例：田中 次郎"></div>
+              <div class="fg"><label class="fl">部署</label><input type="text" id="u-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">権限</label><select id="u-role"><option value="user">一般ユーザー</option><option value="admin">管理者</option></select></div>
+              <div class="fg"><label class="fl">パスワード</label><input type="password" id="u-pw" placeholder="パスワードを設定"></div>
+              <div class="fg"><label class="fl">パスワード（確認）</label><input type="password" id="u-pw2" placeholder="もう一度入力"></div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;"><button class="btn btn-primary btn-sm" onclick="addUser()">追加</button><button class="btn btn-sm" onclick="toggleFP('u-add-form')">キャンセル</button></div>
+          </div>
+          <div id="user-list"></div>
+        </div>
+        <div class="card">
+          <div class="ct" style="margin-bottom:12px;">パスワード変更</div>
+          <div class="g2">
+            <div class="fg"><label class="fl">現在のパスワード</label><input type="password" id="pw-old" placeholder="現在のパスワード"></div>
+            <div></div>
+            <div class="fg"><label class="fl">新しいパスワード</label><input type="password" id="pw-new" placeholder="新しいパスワード"></div>
+            <div class="fg"><label class="fl">新しいパスワード（確認）</label><input type="password" id="pw-new2" placeholder="もう一度入力"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="changePassword()">パスワードを変更</button>
+        </div>
+      </div>
+
+      <!-- ===================== MANAGEMENT REVIEW ===================== -->
+      <div class="page" id="page-mgmt-review">
+        <div class="ph">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div class="pt">マネジメントレビュー</div>
+                <span style="background:#E8EAF6;color:#283593;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #9FA8DA;">ISO 27001 §9.3 / ISO 42001 §9.3</span>
+              </div>
+              <div class="ps">経営層によるISMS・AIMSの定期的な見直しを記録・管理します</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="mr-year-sel" onchange="onMRYearChange()" style="width:110px;padding:6px 8px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;"></select>
+              <button class="btn btn-primary btn-sm admin-only" onclick="openNewMRModal()">＋ 新規レビュー</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="mr-empty" style="text-align:center;padding:64px 0;color:var(--text3);">
+          <div style="font-size:32px;margin-bottom:12px;">📊</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">マネジメントレビューが未登録です</div>
+          <div style="font-size:12px;margin-bottom:20px;">「＋ 新規レビュー」から今年度のレビューを開始してください</div>
+          <button class="btn btn-primary admin-only" onclick="openNewMRModal()">＋ 新規レビューを作成</button>
+        </div>
+
+        <!-- Year overview -->
+        <div id="mr-overview" style="display:none;">
+          <div class="metrics" id="mr-metrics"></div>
+
+          <!-- Review sessions list -->
+          <div class="card" id="mr-sessions-card">
+            <div class="ch">
+              <div>
+                <div class="ct" id="mr-year-title">2026年度 マネジメントレビュー</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="mr-year-meta"></div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-primary btn-sm admin-only" onclick="openNewMRModal()">＋ レビュー会議を追加</button>
+                <button class="btn btn-sm" onclick="genMRReport()">Claude でレビュー報告書を生成</button>
+              </div>
+            </div>
+            <div id="mr-session-list"></div>
+          </div>
+
+          <div class="ai-box" id="ai-mr" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ===================== EDUCATION ===================== -->
+      <div class="page" id="page-education">
+        <div class="ph">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div class="pt">教育・研修</div>
+                <span style="background:#E3F2FD;color:#0D47A1;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #90CAF9;">ISO 27001 §7.2 / ISO 42001 §7.2</span>
+              </div>
+              <div class="ps">研修プログラム管理・個人受講記録・理解度テスト・eラーニングコンテンツ</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" onclick="showEduTab('programs')">研修プログラム</button>
+              <button class="btn btn-sm" onclick="showEduTab('records')">受講記録</button>
+              <button class="btn btn-sm" onclick="showEduTab('test')">理解度テスト</button>
+              <button class="btn btn-primary btn-sm" onclick="showEduTab('elearning')">eラーニング作成</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Programs -->
+        <div id="edu-tab-programs">
+          <div class="metrics" id="edu-metrics"></div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">研修プログラム一覧</div>
+              <button class="btn btn-primary btn-sm admin-only" onclick="openProgModal()">＋ プログラムを追加</button>
+            </div>
+            <table class="tbl">
+              <thead><tr><th>ID</th><th>研修名</th><th>対象</th><th>カテゴリ</th><th>頻度</th><th>所要時間</th><th>受講率</th><th>次回実施</th><th></th></tr></thead>
+              <tbody id="prog-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Records -->
+        <div id="edu-tab-records" style="display:none;">
+          <div class="card">
+            <div class="ch">
+              <div class="ct">個人受講記録</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select id="rec-prog-filter" onchange="renderRecords()" style="width:200px;padding:6px 8px;font-size:12px;border:1px solid var(--border2);border-radius:var(--r-sm);font-family:inherit;background:var(--surface);color:var(--text);"></select>
+                <button class="btn btn-primary btn-sm admin-only" onclick="openRecordModal()">＋ 受講を記録</button>
+              </div>
+            </div>
+            <table class="tbl">
+              <thead><tr><th>ユーザー</th><th>部署</th><th>研修名</th><th>受講日</th><th>スコア</th><th>修了</th><th>修了証</th></tr></thead>
+              <tbody id="rec-tbody"></tbody>
+            </table>
+          </div>
+          <!-- Completion matrix -->
+          <div class="card">
+            <div class="ct" style="margin-bottom:12px;">受講完了マトリクス</div>
+            <div id="completion-matrix" style="overflow-x:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Test -->
+        <div id="edu-tab-test" style="display:none;">
+          <div class="card">
+            <div class="ch">
+              <div class="ct">理解度テスト</div>
+              <button class="btn btn-primary btn-sm" onclick="openTestModal()">テストを受ける</button>
+            </div>
+            <div id="test-prog-list"></div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: eLearning -->
+        <div id="edu-tab-elearning" style="display:none;">
+          <div class="card">
+            <div class="ch"><div class="ct">eラーニングコンテンツ作成（Claude生成）</div></div>
+            <div class="g2">
+              <div class="fg"><label class="fl">研修テーマ</label>
+                <select id="el-theme">
+                  <option>情報セキュリティ基礎（ISMS）</option>
+                  <option>パスワード管理・多要素認証</option>
+                  <option>フィッシング・ソーシャルエンジニアリング対策</option>
+                  <option>情報資産の分類と取り扱い</option>
+                  <option>インシデント報告手順</option>
+                  <option>テレワーク・リモートワークセキュリティ</option>
+                  <option>AIの責任ある利用（AIMS）</option>
+                  <option>AIバイアスと公平性</option>
+                  <option>生成AIの業務利用ガイドライン</option>
+                  <option>個人情報保護・プライバシー</option>
+                  <option>カスタムテーマ（下記入力）</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">対象者</label>
+                <select id="el-audience">
+                  <option>全従業員</option>
+                  <option>管理職・リーダー</option>
+                  <option>情報システム部門</option>
+                  <option>開発エンジニア</option>
+                  <option>営業・マーケ部門</option>
+                  <option>新入社員</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">コンテンツ形式</label>
+                <select id="el-format">
+                  <option>スライド形式（章立て解説）</option>
+                  <option>ケーススタディ形式</option>
+                  <option>Q&A形式（よくある質問）</option>
+                  <option>チェックリスト形式</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">所要時間の目安</label>
+                <select id="el-duration">
+                  <option>5分（要点のみ）</option>
+                  <option>15分（標準）</option>
+                  <option>30分（詳細）</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label class="fl">カスタムテーマ・補足指示（任意）</label><textarea id="el-custom" placeholder="例：社内で最近フィッシング被害が発生したことを踏まえ、具体例を含めた実践的な内容にしてください"></textarea></div>
+            <button class="btn btn-primary" onclick="genElearning()" style="margin-top:4px;">Claude でeラーニングを生成</button>
+          </div>
+          <div id="el-result" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- AI Systems Registry -->
+      <div class="page" id="page-ai-systems">
+        <div class="ph">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div class="pt">AIシステム台帳</div>
+            <span style="background:#E8F5E9;color:#1B5E20;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #A5D6A7;">AIMS ISO 42001</span>
+          </div>
+          <div class="ps">組織で利用・開発するAIシステムを登録・分類・管理します</div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">登録AIシステム数</div><div class="mv pur" id="ais-total">0</div></div>
+          <div class="metric"><div class="mlb">高リスクAI</div><div class="mv red" id="ais-high">0</div></div>
+          <div class="metric"><div class="mlb">影響評価済み</div><div class="mv grn" id="ais-assessed">0</div></div>
+          <div class="metric"><div class="mlb">要対応</div><div class="mv amb" id="ais-action">0</div></div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">AIシステム一覧</div>
+            <button class="btn btn-primary btn-sm admin-only" onclick="toggleFP('ais-form')">＋ 新規登録</button>
+          </div>
+          <div class="fp" id="ais-form">
+            <div class="ft">AIシステムの新規登録</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">システム名</label><input type="text" id="ais-name" placeholder="例：ChatGPT API連携サービス"></div>
+              <div class="fg"><label class="fl">用途カテゴリ</label>
+                <select id="ais-cat">
+                  <option>自然言語処理（NLP）</option>
+                  <option>画像・映像認識</option>
+                  <option>予測・推薦</option>
+                  <option>意思決定支援</option>
+                  <option>コード生成</option>
+                  <option>音声処理</option>
+                  <option>その他</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">AIの役割</label>
+                <select id="ais-role">
+                  <option>利用者（外部AIを利用）</option>
+                  <option>開発者（自社でAIを開発）</option>
+                  <option>提供者（AIサービスを提供）</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">提供者・モデル名</label><input type="text" id="ais-provider" placeholder="例：OpenAI / GPT-4o"></div>
+              <div class="fg"><label class="fl">管理部門</label><input type="text" id="ais-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">管理担当者</label><input type="text" id="ais-owner" placeholder="例：山田 太郎"></div>
+              <div class="fg"><label class="fl">AIリスクレベル</label>
+                <select id="ais-risk">
+                  <option value="low">低（補助的・限定的用途）</option>
+                  <option value="medium">中（業務への影響あり）</option>
+                  <option value="high">高（重要意思決定・個人影響大）</option>
+                  <option value="unacceptable">受入不可（禁止対象）</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">個人データ利用</label>
+                <select id="ais-personal">
+                  <option value="none">なし</option>
+                  <option value="limited">限定的（匿名化済み等）</option>
+                  <option value="yes">あり</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label class="fl">概要・用途説明</label><textarea id="ais-desc" placeholder="このAIシステムの用途・機能・対象ユーザーを記述してください"></textarea></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button class="btn btn-primary btn-sm" onclick="submitAIS()">登録してAI評価を実行 →</button>
+              <button class="btn btn-sm" onclick="toggleFP('ais-form')">キャンセル</button>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>システム名</th><th>カテゴリ</th><th>役割</th><th>提供者</th><th>管理部門</th><th>リスクレベル</th><th>個人データ</th><th>影響評価</th><th></th></tr></thead>
+            <tbody id="ais-tbody"></tbody>
+          </table>
+          <div class="ai-box" id="ai-ais" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- AI Impact Assessment -->
+      <div class="page" id="page-ai-impact">
+        <div class="ph">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div class="pt">AI影響評価（AIIA）</div>
+            <span style="background:#E8F5E9;color:#1B5E20;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #A5D6A7;">AIMS ISO 42001 §8.4</span>
+          </div>
+          <div class="ps">AIシステムごとの公平性・透明性・説明可能性・安全性を評価します</div>
+        </div>
+        <div id="aiia-list">
+          <div style="text-align:center;padding:48px;color:var(--text3);">
+            <div style="font-size:28px;margin-bottom:10px;">🔍</div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">AIシステムが未登録です</div>
+            <div style="font-size:12px;">まずAIシステム台帳でシステムを登録してください</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Risk -->
+      <div class="page" id="page-ai-risk">
+        <div class="ph">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div class="pt">AIリスク管理</div>
+            <span style="background:#E8F5E9;color:#1B5E20;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #A5D6A7;">AIMS ISO 42001 §6.1</span>
+          </div>
+          <div class="ps">AI固有のリスク（幻覚・バイアス・過度依存・プライバシー侵害等）を管理します</div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">AIリスク総数</div><div class="mv red" id="air-total">0</div></div>
+          <div class="metric"><div class="mlb">高リスク</div><div class="mv red" id="air-high">0</div></div>
+          <div class="metric"><div class="mlb">対応済み</div><div class="mv grn" id="air-done">0</div></div>
+          <div class="metric"><div class="mlb">未対応</div><div class="mv amb" id="air-open">0</div></div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">AIリスク台帳</div>
+            <button class="btn btn-primary btn-sm" onclick="toggleFP('air-form')">＋ 手動追加</button>
+          </div>
+          <div class="fp" id="air-form">
+            <div class="ft">AIリスクの手動追加</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">リスク名</label><input type="text" id="air-name" placeholder="例：生成AIによる虚偽情報の出力"></div>
+              <div class="fg"><label class="fl">関連AIシステム</label><select id="air-sys-sel"></select></div>
+              <div class="fg"><label class="fl">リスクカテゴリ</label>
+                <select id="air-cat">
+                  <option>幻覚・誤情報</option>
+                  <option>バイアス・差別</option>
+                  <option>プライバシー侵害</option>
+                  <option>セキュリティ</option>
+                  <option>過度依存</option>
+                  <option>説明可能性の欠如</option>
+                  <option>著作権・知的財産</option>
+                  <option>その他</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">影響を受ける原則</label>
+                <select id="air-principle">
+                  <option>公平性</option>
+                  <option>透明性</option>
+                  <option>説明可能性</option>
+                  <option>安全性</option>
+                  <option>プライバシー</option>
+                  <option>人間の監督</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">影響度 (1-5)</label><input type="text" id="air-imp" placeholder="4"></div>
+              <div class="fg"><label class="fl">可能性 (1-5)</label><input type="text" id="air-prb" placeholder="3"></div>
+            </div>
+            <div class="fg"><label class="fl">対応策</label><input type="text" id="air-act" placeholder="例：出力結果の人間によるレビュープロセスを導入"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;"><button class="btn btn-primary btn-sm" onclick="addAIRisk()">追加</button><button class="btn btn-sm" onclick="toggleFP('air-form')">キャンセル</button></div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>リスク名</th><th>関連AIシステム</th><th>カテゴリ</th><th>影響原則</th><th>影響度</th><th>可能性</th><th>レベル</th><th>対応策</th><th>状態</th><th></th></tr></thead>
+            <tbody id="air-tbody"></tbody>
+          </table>
+          <div class="ai-box" id="ai-air-row" style="display:none;"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Claude でAIリスクを評価する</div></div>
+          <div class="fg"><label class="fl">AIシステムの概要・懸念事項を入力</label><textarea id="air-input" placeholder="例：採用選考にAIスコアリングを導入予定。候補者のデータを学習させる。"></textarea></div>
+          <button class="btn btn-primary btn-sm" onclick="assessAIRisk()">Claude で評価する</button>
+          <div class="ai-box" id="ai-air"><span style="color:#bbb;font-style:italic;">AIシステムの概要を入力するとISO 42001の観点でリスク分析を行います</span></div>
+        </div>
+      </div>
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="mh"><div class="m-title" id="m-title">リスク自動提案</div><div class="m-sub" id="m-sub"></div></div>
+    <div class="m-body" id="m-body"></div>
+    <div class="m-foot"><div class="m-foot-info" id="m-info"></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeModal()">閉じる</button><button class="btn btn-green btn-sm" onclick="adoptFromModal()">選択したリスクを提案キューに追加</button></div></div>
+  </div>
+</div>
+
+<!-- Education: Program Modal -->
+<div class="modal-bg" id="prog-modal">
+  <div class="modal" style="width:540px;">
+    <div class="mh"><div class="m-title">研修プログラムの追加</div><div class="m-sub">研修の基本情報を設定します</div></div>
+    <div class="m-body" style="padding:20px;">
+      <div class="g2">
+        <div class="fg"><label class="fl">研修名</label><input type="text" id="pm-name" placeholder="例：情報セキュリティ年次研修"></div>
+        <div class="fg"><label class="fl">カテゴリ</label>
+          <select id="pm-cat">
+            <option>ISMS基礎</option><option>AIMS・AI倫理</option><option>技術・実務</option>
+            <option>コンプライアンス</option><option>インシデント対応</option><option>その他</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">対象者</label><input type="text" id="pm-target" placeholder="例：全従業員"></div>
+        <div class="fg"><label class="fl">頻度</label>
+          <select id="pm-freq"><option>年1回</option><option>年2回</option><option>四半期</option><option>月次</option><option>随時</option><option>入社時のみ</option></select>
+        </div>
+        <div class="fg"><label class="fl">所要時間（分）</label><input type="text" id="pm-dur" placeholder="60"></div>
+        <div class="fg"><label class="fl">次回実施予定日</label><input type="text" id="pm-next" placeholder="例：2026-09-01"></div>
+      </div>
+      <div class="fg"><label class="fl">研修の概要・目的</label><textarea id="pm-desc" placeholder="この研修の目的・内容の概要を記述してください"></textarea></div>
+      <div class="fg"><label class="fl">合格基準スコア（%）</label><input type="text" id="pm-pass" placeholder="80"></div>
+    </div>
+    <div class="m-foot"><div></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeEduModal('prog-modal')">キャンセル</button><button class="btn btn-primary btn-sm" onclick="saveProgram()">追加</button></div></div>
+  </div>
+</div>
+
+<!-- Education: Record Modal -->
+<div class="modal-bg" id="record-modal">
+  <div class="modal" style="width:500px;">
+    <div class="mh"><div class="m-title">受講記録の追加</div><div class="m-sub">個人の研修受講を記録します</div></div>
+    <div class="m-body" style="padding:20px;">
+      <div class="g2">
+        <div class="fg"><label class="fl">研修プログラム</label><select id="rec-prog-sel" style="width:100%;"></select></div>
+        <div class="fg"><label class="fl">ユーザー</label><select id="rec-user-sel" style="width:100%;"></select></div>
+        <div class="fg"><label class="fl">受講日</label><input type="text" id="rec-date" placeholder="例：2026-06-15"></div>
+        <div class="fg"><label class="fl">テストスコア（%）</label><input type="text" id="rec-score" placeholder="85"></div>
+      </div>
+      <div class="fg"><label class="fl">備考</label><input type="text" id="rec-note" placeholder="例：外部研修機関で受講"></div>
+    </div>
+    <div class="m-foot"><div></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeEduModal('record-modal')">キャンセル</button><button class="btn btn-primary btn-sm" onclick="saveRecord()">記録する</button></div></div>
+  </div>
+</div>
+
+<!-- Education: Test Modal -->
+<div class="modal-bg" id="test-modal">
+  <div class="modal" style="width:640px;max-height:90vh;">
+    <div class="mh">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="m-title" id="test-modal-title">理解度テスト</div><div class="m-sub" id="test-modal-sub"></div></div>
+        <button class="btn btn-sm" onclick="closeEduModal('test-modal')">閉じる</button>
+      </div>
+    </div>
+    <div class="m-body" style="padding:20px;overflow-y:auto;">
+      <div id="test-loading" style="text-align:center;padding:32px;color:var(--text3);">
+        <div style="font-size:24px;margin-bottom:10px;">⏳</div>
+        <div style="font-size:13px;">Claude がテストを生成しています...</div>
+      </div>
+      <div id="test-questions" style="display:none;"></div>
+      <div id="test-result" style="display:none;"></div>
+    </div>
+    <div class="m-foot" id="test-foot" style="display:none;">
+      <div style="font-size:12px;color:var(--text2);" id="test-progress">0 / 0 問回答済み</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="closeEduModal('test-modal')">閉じる</button>
+        <button class="btn btn-primary btn-sm" id="test-submit-btn" onclick="submitTest()">採点する</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="mr-modal">
+  <div class="modal" style="width:760px;max-height:92vh;">
+    <div class="mh">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="m-title" id="mr-modal-title">マネジメントレビュー会議</div><div class="m-sub">ISO 27001 §9.3 / ISO 42001 §9.3 に基づくインプット・アウトプットを記録します</div></div>
+        <button class="btn btn-sm" onclick="closeMRModal()">閉じる</button>
+      </div>
+    </div>
+    <div class="m-body" style="padding:0;">
+      <div style="display:flex;border-bottom:1px solid var(--border);padding:0 20px;background:var(--surface2);">
+        <button class="mr-tab active" onclick="switchMRTab('input',this)">インプット</button>
+        <button class="mr-tab" onclick="switchMRTab('output',this)">アウトプット・決定事項</button>
+        <button class="mr-tab" onclick="switchMRTab('summary',this)">サマリー・記録</button>
+      </div>
+      <div class="mr-tab-pane active" id="mr-tab-input" style="padding:20px;overflow-y:auto;max-height:calc(92vh - 200px);">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">ISO 27001 §9.3.2 が規定するレビューへのインプット項目</div>
+        <div class="g2">
+          <div class="fg"><label class="fl">開催日</label><input type="text" id="mr-date" placeholder="例：2026-06-30"></div>
+          <div class="fg"><label class="fl">議長（トップマネジメント）</label><input type="text" id="mr-chair" placeholder="例：代表取締役 山田 太郎"></div>
+          <div class="fg"><label class="fl">出席者</label><input type="text" id="mr-attendees" placeholder="例：CISO、情シス部長、各部門長"></div>
+          <div class="fg"><label class="fl">対象規格</label>
+            <select id="mr-scope-std">
+              <option value="both">ISMS + AIMS（ISO 27001 + ISO 42001）</option>
+              <option value="isms">ISMS のみ（ISO 27001）</option>
+              <option value="aims">AIMS のみ（ISO 42001）</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin:14px 0 8px;">インプット項目の評価</div>
+        <div id="mr-input-items"></div>
+      </div>
+      <div class="mr-tab-pane" id="mr-tab-output" style="padding:20px;display:none;overflow-y:auto;max-height:calc(92vh - 200px);">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">ISO 27001 §9.3.3 が規定するレビューのアウトプット（決定事項・改善指示）</div>
+        <div id="mr-output-items"></div>
+        <button class="add-resp-btn" onclick="addMROutput()">＋ 決定事項・改善指示を追加</button>
+        <div style="margin-top:14px;"><label class="fl" style="margin-bottom:4px;display:block;">総合評価・所見</label><textarea id="mr-overall" style="min-height:80px;" placeholder="マネジメントレビュー全体の評価・所見を記述してください"></textarea></div>
+        <div style="margin-top:10px;"><button class="btn btn-sm" onclick="aiGenMROutput()">Claude で決定事項・改善指示を提案</button><div class="ai-box" id="ai-mr-output" style="display:none;margin-top:8px;"></div></div>
+      </div>
+      <div class="mr-tab-pane" id="mr-tab-summary" style="padding:20px;display:none;overflow-y:auto;max-height:calc(92vh - 200px);">
+        <div id="mr-summary-content"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;"><button class="btn btn-sm" onclick="aiGenMRSummary()">Claude でサマリーを生成</button></div>
+        <div class="ai-box" id="ai-mr-summary" style="display:none;margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <div style="font-size:11px;color:var(--text3);" id="mr-modal-status"></div>
+      <div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeMRModal()">キャンセル</button><button class="btn btn-primary btn-sm" onclick="saveMRSession()">保存</button></div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="new-audit-modal">
+  <div class="modal" style="width:500px;">
+    <div class="mh"><div class="m-title">新規監査年度の作成</div><div class="m-sub">内部監査の年度・期間・監査員を設定します</div></div>
+    <div class="m-body" style="padding:20px;">
+      <div class="fg"><label class="fl">監査年度</label><select id="na-year" style="width:100%;"></select></div>
+      <div class="g2">
+        <div class="fg"><label class="fl">監査開始日</label><input type="text" id="na-start" placeholder="例：2026-04-01"></div>
+        <div class="fg"><label class="fl">監査終了日</label><input type="text" id="na-end" placeholder="例：2026-06-30"></div>
+      </div>
+      <div class="fg"><label class="fl">主任監査員</label><input type="text" id="na-auditor" placeholder="例：山田 太郎"></div>
+      <div class="fg"><label class="fl">監査目的・範囲（任意）</label><textarea id="na-scope" placeholder="例：情報セキュリティ管理システムの有効性確認" style="min-height:56px;"></textarea></div>
+    </div>
+    <div class="m-foot"><div></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeAuditModal('new-audit-modal')">キャンセル</button><button class="btn btn-primary btn-sm" onclick="createAuditYear()">作成して部署を追加 →</button></div></div>
+  </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal-bg" id="add-dept-modal">
+  <div class="modal" style="width:560px;">
+    <div class="mh"><div class="m-title" id="add-dept-title">部署の追加</div><div class="m-sub">監査対象部署とチェックリスト項目を設定します</div></div>
+    <div class="m-body" style="padding:20px;">
+      <div class="g2">
+        <div class="fg"><label class="fl">部署名</label><input type="text" id="ad-dept" placeholder="例：情報システム部"></div>
+        <div class="fg"><label class="fl">被監査者</label><input type="text" id="ad-auditee" placeholder="例：鈴木 一郎"></div>
+      </div>
+      <div class="fg"><label class="fl">担当監査員</label><input type="text" id="ad-auditor" placeholder="例：山田 太郎"></div>
+      <div class="fg" style="margin-top:4px;"><label class="fl">監査項目テンプレート</label>
+        <select id="ad-tmpl" onchange="loadCheckTemplate()" style="width:100%;">
+          <option value="">（テンプレートを選択）</option>
+          <option value="general">全部署共通（ISO 27001 基本）</option>
+          <option value="it">情報システム部門向け</option>
+          <option value="hr">人事・総務部門向け</option>
+          <option value="sales">営業・マーケ部門向け</option>
+          <option value="dev">開発・エンジニア部門向け</option>
+        </select>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin:10px 0 6px;">チェックリスト項目</div>
+      <div id="ad-checklist-items" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;background:var(--surface2);"></div>
+      <button class="add-resp-btn" style="margin-top:6px;" onclick="addCheckItem()">＋ 項目を追加</button>
+    </div>
+    <div class="m-foot"><div></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="closeAuditModal('add-dept-modal')">キャンセル</button><button class="btn btn-primary btn-sm" onclick="saveDeptAudit()">追加</button></div></div>
+  </div>
+</div>
+
+<!-- Dept Detail Modal -->
+<div class="modal-bg" id="dept-detail-modal">
+  <div class="modal" style="width:680px;">
+    <div class="mh">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="m-title" id="dd-title">部署名</div><div class="m-sub" id="dd-sub"></div></div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="aiAuditDept()">Claude で所見を生成</button>
+          <button class="btn btn-sm" onclick="closeAuditModal('dept-detail-modal')">閉じる</button>
+        </div>
+      </div>
+    </div>
+    <div class="m-body" style="padding:0;">
+      <table class="tbl" style="font-size:12px;">
+        <thead><tr><th style="width:40px;"></th><th>監査項目</th><th style="width:80px;">ISO条項</th><th style="width:100px;">結果</th><th>指摘・所見</th></tr></thead>
+        <tbody id="dd-tbody"></tbody>
+      </table>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);">
+      <div class="ai-box" id="ai-dept-audit" style="margin-top:0;"><span style="color:#bbb;font-style:italic;">「Claude で所見を生成」を押すと監査結果の分析・所見案を生成します</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// AUTH
+// ============================================================
+const DEFAULT_USERS = [
+  {id:'admin', displayName:'システム管理者', dept:'情報システム部', role:'admin', pwHash:hashPw('admin123')},
+  {id:'yamada', displayName:'山田 太郎', dept:'情報システム部', role:'user', pwHash:hashPw('user123')},
+  {id:'sato',   displayName:'佐藤 花子', dept:'人事部',          role:'user', pwHash:hashPw('user123')},
+];
+
+function hashPw(pw) {
+  // Simple deterministic hash for demo (not cryptographically secure)
+  let h = 0x811c9dc5;
+  for (let i = 0; i < pw.length; i++) { h ^= pw.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8,'0');
+}
+
+function loadUsers() {
+  const stored = localStorage.getItem('isms_users');
+  return stored ? JSON.parse(stored) : [...DEFAULT_USERS];
+}
+function saveUsers(users) { localStorage.setItem('isms_users', JSON.stringify(users)); }
+
+let USERS = loadUsers();
+let currentUser = null;
+
+function doLogin() {
+  const id = document.getElementById('l-id').value.trim();
+  const pw = document.getElementById('l-pw').value;
+  const err = document.getElementById('l-err');
+  if (!id || !pw) { err.textContent = 'IDとパスワードを入力してください'; return; }
+  USERS = loadUsers();
+  const user = USERS.find(u => u.id === id && u.pwHash === hashPw(pw));
+  if (!user) { err.textContent = 'IDまたはパスワードが正しくありません'; return; }
+  err.textContent = '';
+  currentUser = user;
+  localStorage.setItem('isms_session', JSON.stringify({id: user.id, ts: Date.now()}));
+  bootApp();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('isms_session');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-id').value = '';
+  document.getElementById('l-pw').value = '';
+  document.getElementById('l-err').textContent = '';
+}
+
+function checkSession() {
+  const s = localStorage.getItem('isms_session');
+  if (!s) return;
+  const {id, ts} = JSON.parse(s);
+  // 8-hour session
+  if (Date.now() - ts > 8 * 3600 * 1000) { localStorage.removeItem('isms_session'); return; }
+  USERS = loadUsers();
+  const user = USERS.find(u => u.id === id);
+  if (user) { currentUser = user; bootApp(); }
+}
+
+function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  // Sidebar user info
+  const av = document.getElementById('sb-avatar');
+  av.textContent = (currentUser.displayName || currentUser.id).charAt(0).toUpperCase();
+  document.getElementById('sb-name').textContent = currentUser.displayName || currentUser.id;
+  document.getElementById('sb-role').textContent = currentUser.role === 'admin' ? '管理者' : '一般ユーザー';
+  // Show/hide admin items
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = currentUser.role === 'admin' ? 'flex' : 'none';
+  });
+  // Readonly notices for general users
+  document.querySelectorAll('.readonly-notice').forEach(el => {
+    el.style.display = currentUser.role !== 'admin' ? 'block' : 'none';
+  });
+  initApp();
+  renderUsers();
+}
+
+// ============================================================
+// USER MANAGEMENT
+// ============================================================
+function renderUsers() {
+  const list = document.getElementById('user-list');
+  if (!list) return;
+  USERS = loadUsers();
+  list.innerHTML = USERS.map(u => `
+    <div class="user-row">
+      <div class="ua">${(u.displayName||u.id).charAt(0).toUpperCase()}</div>
+      <div class="u-info">
+        <div class="u-name-lg">${u.displayName || u.id} <span style="font-size:11px;color:var(--text3);">(@${u.id})</span></div>
+        <div class="u-meta">${u.dept || '—'} &nbsp;·&nbsp; <span class="badge ${u.role==='admin'?'b-admin':'b-user'}">${u.role==='admin'?'管理者':'一般ユーザー'}</span></div>
+      </div>
+      ${u.id !== currentUser.id ? `
+        <button class="btn btn-sm" onclick="toggleUserRole('${u.id}')">${u.role==='admin'?'一般に変更':'管理者に昇格'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">削除</button>
+      ` : `<span style="font-size:11px;color:var(--text3);">（自分）</span>`}
+    </div>`).join('');
+}
+
+function addUser() {
+  const id = document.getElementById('u-id').value.trim();
+  const disp = document.getElementById('u-disp').value.trim();
+  const dept = document.getElementById('u-dept').value.trim();
+  const role = document.getElementById('u-role').value;
+  const pw = document.getElementById('u-pw').value;
+  const pw2 = document.getElementById('u-pw2').value;
+  if (!id || !pw) { showToast('IDとパスワードは必須です'); return; }
+  if (pw !== pw2) { showToast('パスワードが一致しません'); return; }
+  USERS = loadUsers();
+  if (USERS.find(u => u.id === id)) { showToast('そのIDは既に使用されています'); return; }
+  USERS.push({id, displayName: disp||id, dept, role, pwHash: hashPw(pw)});
+  saveUsers(USERS);
+  toggleFP('u-add-form');
+  renderUsers();
+  showToast(`ユーザー「${disp||id}」を追加しました`);
+}
+
+function deleteUser(uid) {
+  if (!confirm(`ユーザー「${uid}」を削除しますか？`)) return;
+  USERS = loadUsers();
+  USERS = USERS.filter(u => u.id !== uid);
+  saveUsers(USERS);
+  renderUsers();
+  showToast('ユーザーを削除しました');
+}
+
+function toggleUserRole(uid) {
+  USERS = loadUsers();
+  const u = USERS.find(x => x.id === uid);
+  if (!u) return;
+  u.role = u.role === 'admin' ? 'user' : 'admin';
+  saveUsers(USERS);
+  renderUsers();
+  showToast(`${u.displayName} の権限を変更しました`);
+}
+
+function changePassword() {
+  const old = document.getElementById('pw-old').value;
+  const nw = document.getElementById('pw-new').value;
+  const nw2 = document.getElementById('pw-new2').value;
+  if (!old || !nw) { showToast('全てのフィールドを入力してください'); return; }
+  if (nw !== nw2) { showToast('新しいパスワードが一致しません'); return; }
+  USERS = loadUsers();
+  const u = USERS.find(x => x.id === currentUser.id);
+  if (!u || u.pwHash !== hashPw(old)) { showToast('現在のパスワードが正しくありません'); return; }
+  u.pwHash = hashPw(nw);
+  saveUsers(USERS);
+  currentUser = u;
+  document.getElementById('pw-old').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-new2').value = '';
+  showToast('パスワードを変更しました');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// APP DATA & LOGIC
+// ============================================================
+const clsBadge={'極秘':'b-secret','機密':'b-conf','社外秘':'b-internal','公開':'b-public'};
+const clsColor={'極秘':'#C0392B','機密':'#E67E22','社外秘':'#2980B9','公開':'#27AE60'};
+
+const RISK_TMPL = {
+  '情報・データ':[
+    {name:'機密情報の不正漏洩',cia:'機密性',impact:5,prob:3,action:'アクセス制御の強化・暗号化の実施',iso:'A.8.2',desc:'権限のない者による情報へのアクセスや持ち出しにより機密性が損なわれるリスク'},
+    {name:'情報の改ざん・破損',cia:'完全性',impact:4,prob:2,action:'バックアップの実施・変更管理プロセスの整備',iso:'A.8.3',desc:'意図的または偶発的な操作ミスによりデータの正確性・完全性が損なわれるリスク'},
+    {name:'情報へのアクセス不能',cia:'可用性',impact:4,prob:2,action:'冗長化・BCP/DRPの整備',iso:'A.8.1',desc:'システム障害やランサムウェアにより必要なときに情報にアクセスできなくなるリスク'},
+    {name:'個人情報の漏洩',cia:'機密性',impact:5,prob:3,action:'個人情報保護方針の整備・アクセスログ監視',iso:'A.18.1',desc:'個人情報保護法違反につながる個人データの漏洩リスク'},
+  ],
+  'ソフトウェア':[
+    {name:'脆弱性の悪用',cia:'機密性',impact:5,prob:4,action:'定期的なパッチ適用・脆弱性管理プロセスの整備',iso:'A.12.6',desc:'既知の脆弱性を悪用した不正アクセス・情報漏洩のリスク'},
+    {name:'不正ソフトウェア（マルウェア）の侵入',cia:'完全性',impact:5,prob:3,action:'マルウェア対策ソフトの導入・定期スキャン',iso:'A.12.2',desc:'マルウェア・ランサムウェア等の侵入によるシステム破壊リスク'},
+    {name:'ソフトウェアの不正操作',cia:'完全性',impact:4,prob:2,action:'特権アクセス管理・操作ログの監視',iso:'A.9.4',desc:'管理者権限の乱用や内部不正によるシステム改ざんリスク'},
+  ],
+  'ハードウェア':[
+    {name:'機器の盗難・紛失',cia:'機密性',impact:4,prob:3,action:'全データの暗号化・資産管理台帳の整備',iso:'A.11.2',desc:'ノートPC・記録媒体等の物理的な盗難・紛失による情報漏洩リスク'},
+    {name:'機器の物理的破損・故障',cia:'可用性',impact:4,prob:3,action:'定期的な保守点検・交換計画の策定',iso:'A.11.2',desc:'機器の老朽化・物理的損傷による業務停止リスク'},
+    {name:'記録媒体の不適切な廃棄',cia:'機密性',impact:4,prob:2,action:'データ消去手順の整備・廃棄証明書の取得',iso:'A.8.3',desc:'HDD・USBメモリ等の不適切な廃棄による情報漏洩リスク'},
+  ],
+  'ネットワーク':[
+    {name:'外部からの不正アクセス・侵入',cia:'機密性',impact:5,prob:4,action:'ファイアウォール・IDS/IPS・MFAの導入',iso:'A.13.1',desc:'外部からの不正アクセスによるシステム侵害・情報窃取リスク'},
+    {name:'通信の盗聴・傍受',cia:'機密性',impact:4,prob:3,action:'通信の暗号化（TLS/VPN）の徹底',iso:'A.13.2',desc:'暗号化されていない通信の盗聴による情報漏洩リスク'},
+    {name:'サービス妨害攻撃（DoS/DDoS）',cia:'可用性',impact:4,prob:3,action:'DDoS対策サービスの導入・帯域冗長化',iso:'A.13.1',desc:'大量トラフィック攻撃によるサービス停止リスク'},
+  ],
+  '人員・スキル':[
+    {name:'内部不正・情報持ち出し',cia:'機密性',impact:5,prob:2,action:'アクセス権の最小化・退職時の権限即時抹消',iso:'A.7.2',desc:'従業員による故意の情報持ち出し・不正利用リスク'},
+    {name:'フィッシング等ソーシャルエンジニアリング',cia:'機密性',impact:4,prob:3,action:'セキュリティ教育の定期実施・フィッシング訓練',iso:'A.7.2',desc:'フィッシング・なりすまし等の人的攻撃によるリスク'},
+    {name:'人的ミスによる情報流出',cia:'機密性',impact:4,prob:3,action:'誤送信防止ツールの導入・操作手順書の整備',iso:'A.7.2',desc:'誤操作・誤送信等の人的ミスによる情報漏洩リスク'},
+  ],
+  '施設・設備':[
+    {name:'不正入室・物理的侵入',cia:'機密性',impact:4,prob:2,action:'入退室管理システムの整備・監視カメラの設置',iso:'A.11.1',desc:'権限のない者によるサーバー室・執務エリアへの侵入リスク'},
+    {name:'自然災害・設備障害',cia:'可用性',impact:5,prob:2,action:'BCP/DRP策定・代替拠点の確保',iso:'A.11.1',desc:'火災・地震・停電等によるシステム停止・データ消失リスク'},
+  ],
+};
+
+let assets, risks, proposedRisks, riskCounter, responseCounter, filteredAssets, openDrawers, modalProposals;
+
+function initApp() {
+  assets = [
+    {id:'A-001',name:'顧客データベース',cat:'情報・データ',cls:'極秘',dept:'情報システム部',owner:'山田 太郎',loc:'AWS RDS',desc:'顧客の個人情報・購買履歴を格納するメインDB'},
+    {id:'A-002',name:'社員人事情報',cat:'情報・データ',cls:'極秘',dept:'人事部',owner:'佐藤 花子',loc:'社内オンプレ',desc:'社員の個人情報・給与・評価情報'},
+    {id:'A-003',name:'Active Directory',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'社内サーバー室',desc:'全社認証・権限管理システム'},
+    {id:'A-004',name:'基幹業務システム',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'田中 次郎',loc:'AWS EC2',desc:'受発注・在庫管理の中核システム'},
+    {id:'A-005',name:'社内ネットワーク機器',cat:'ネットワーク',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'本社サーバー室',desc:'ルーター・スイッチ・ファイアウォール一式'},
+  ];
+  risks = [
+    {id:'R-001',name:'不正アクセス',assetId:'A-003',assetName:'Active Directory',cia:'機密性',cat:'技術',impact:5,prob:4,source:'manual',
+     responses:[
+       {id:'ra1',name:'MFA（多要素認証）の全社展開',desc:'管理者・一般ユーザー全員にMFAを必須化する',status:'done',note:'2026年2月に全社展開完了'},
+       {id:'ra2',name:'ログイン試行の異常検知',desc:'失敗ログイン5回以上でアカウントロック・アラート通知を設定する',status:'hold',note:''},
+     ]},
+    {id:'R-002',name:'データ漏洩',assetId:'A-001',assetName:'顧客データベース',cia:'機密性',cat:'人的',impact:5,prob:3,source:'manual',
+     responses:[
+       {id:'rb1',name:'DBアクセス制御の強化',desc:'最小権限原則に基づきDBアクセス権を見直す',status:'done',note:'権限棚卸し完了'},
+       {id:'rb2',name:'データ暗号化の徹底',desc:'保存データ・転送データの暗号化を実施する',status:'none',note:''},
+     ]},
+    {id:'R-003',name:'サービス停止',assetId:'A-004',assetName:'基幹業務システム',cia:'可用性',cat:'技術',impact:4,prob:2,source:'manual',
+     responses:[{id:'rc1',name:'BCP/DRP計画の策定',desc:'業務継続計画・災害復旧計画を策定する',status:'hold',note:'2026年Q2完了予定'}]},
+    {id:'R-004',name:'マルウェア感染',assetId:'A-004',assetName:'基幹業務システム',cia:'完全性',cat:'技術',impact:4,prob:3,source:'manual',
+     responses:[
+       {id:'rd1',name:'EDRの導入',desc:'全エンドポイントにEDRを導入する',status:'done',note:'CrowdStrike Falcon導入済み'},
+       {id:'rd2',name:'定期バックアップの実施',desc:'重要データの日次バックアップを実施する',status:'done',note:'S3への自動バックアップ設定済み'},
+     ]},
+    {id:'R-005',name:'委託先管理不備',assetId:null,assetName:'—',cia:'機密性',cat:'組織',impact:3,prob:2,source:'manual',
+     responses:[{id:'re1',name:'サプライヤーセキュリティ評価',desc:'委託先に年1回のセキュリティ評価アンケートを実施する',status:'reject',note:'今期はリソース不足のため却下。来期再検討'}]},
+  ];
+  proposedRisks = [];
+  riskCounter = 6;
+  responseCounter = 200;
+  filteredAssets = [...assets];
+  openDrawers = new Set();
+  modalProposals = [];
+  renderAssets();
+  renderRisks();
+  initAudit();
+  initMR();
+  initEducation();
+  initAIMS();
+  updateMetrics();
+  populateAsel();
+}
+
+// ============================================================
+// RENDER ASSETS
+// ============================================================
+function renderAssets() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const tb = document.getElementById('a-tbody');
+  tb.innerHTML = filteredAssets.map(a => {
+    const linked = risks.filter(r => r.assetId === a.id);
+    const chips = linked.length
+      ? linked.map(r=>`<span class="linked-chip" onclick="gotoRisk('${r.id}')">${r.name}</span>`).join(' ')
+      : '<span style="color:#bbb;font-size:11px;">なし</span>';
+    const propBtn = isAdmin ? `<button class="btn-ghost" onclick="openModal('${a.id}')">＋ リスク提案</button>` : '';
+    return `<tr>
+      <td style="color:#999;font-size:11px;">${a.id}</td>
+      <td style="font-weight:600;">${a.name}</td>
+      <td><span class="tag">${a.cat}</span></td>
+      <td><span class="badge ${clsBadge[a.cls]||'b-public'}">${a.cls}</span></td>
+      <td style="color:#888;">${a.dept}</td>
+      <td>${a.owner}</td>
+      <td style="color:#888;font-size:11px;">${a.loc}</td>
+      <td style="max-width:200px;">${chips}</td>
+      <td>${propBtn}</td>
+    </tr>`;
+  }).join('');
+  updateMetrics();
+}
+
+// ============================================================
+// RENDER RISKS
+// ============================================================
+function renderRisks() {
+  const tb = document.getElementById('r-tbody');
+  let html = '';
+  for (const r of risks) {
+    const lvl = r.impact + r.prob;
+    const badge = lvl>=8?'b-high':lvl>=5?'b-med':'b-low';
+    const lbl = lvl>=8?'高':lvl>=5?'中':'低';
+    const srcTag = r.source==='proposed'?'<span class="badge b-prop" style="font-size:9px;">自動提案</span>':'';
+    const open = openDrawers.has(r.id);
+    const respHTML = respSummaryHTML(r);
+    html += `<tr id="rrow-${r.id}" style="cursor:pointer;" onclick="toggleDrawer('${r.id}')">
+      <td style="width:28px;text-align:center;color:var(--text3);font-size:12px;">${open?'▾':'▸'}</td>
+      <td style="color:#999;font-size:11px;">${r.id}</td>
+      <td style="font-weight:600;">${r.name} ${srcTag}</td>
+      <td><span class="linked-chip" style="${!r.assetId?'opacity:0.4;pointer-events:none':''}" onclick="event.stopPropagation();gotoAsset('${r.assetId}')">${r.assetName||'—'}</span></td>
+      <td><span class="badge ${r.cia==='機密性'?'b-secret':r.cia==='完全性'?'b-conf':'b-internal'}">${r.cia}</span></td>
+      <td style="text-align:center;">${r.impact}</td>
+      <td style="text-align:center;">${r.prob}</td>
+      <td><span class="badge ${badge}">${lbl} (${lvl})</span></td>
+      <td>${respHTML}</td>
+      <td><button class="btn-ghost" onclick="event.stopPropagation();aiAnalyzeRisk('${r.id}')">AI分析</button></td>
+    </tr>
+    <tr id="drawer-tr-${r.id}"><td colspan="10" style="padding:0;border-bottom:${open?'1px solid var(--border)':'none'};">
+      <div class="risk-drawer ${open?'open':''}" id="drawer-${r.id}">${renderDrawer(r)}</div>
+    </td></tr>`;
+  }
+  tb.innerHTML = html;
+  updateMetrics();
+}
+
+function respSummaryHTML(r) {
+  if (!r.responses||!r.responses.length) return '<span style="color:#bbb;font-size:11px;">対応なし</span>';
+  const c={done:0,hold:0,reject:0,none:0};
+  r.responses.forEach(x=>c[x.status]=(c[x.status]||0)+1);
+  return [c.done&&`<span class="badge rs-done">${c.done} 実施済み</span>`,c.hold&&`<span class="badge rs-hold">${c.hold} 保留中</span>`,c.reject&&`<span class="badge rs-reject">${c.reject} 却下</span>`,c.none&&`<span class="badge rs-none">${c.none} 未設定</span>`].filter(Boolean).join(' ');
+}
+
+function renderDrawer(r) {
+  const resps = r.responses||[];
+  const respHTML = resps.map(resp=>`
+    <div class="response-item" id="ri-${resp.id}">
+      <div class="ri-head">
+        <div class="ri-main">
+          <div class="ri-name">${resp.name}</div>
+          <div class="ri-desc">${resp.desc}</div>
+          <div class="ri-status-row">
+            <span style="font-size:10px;color:var(--text3);">判断：</span>
+            <button class="rs-btn done ${resp.status==='done'?'active':''}" onclick="setRespSt('${r.id}','${resp.id}','done')">✓ 実施済み</button>
+            <button class="rs-btn hold ${resp.status==='hold'?'active':''}" onclick="setRespSt('${r.id}','${resp.id}','hold')">⏸ 保留中</button>
+            <button class="rs-btn reject ${resp.status==='reject'?'active':''}" onclick="setRespSt('${r.id}','${resp.id}','reject')">✕ 却下</button>
+          </div>
+          ${resp.note?`<div style="margin-top:6px;font-size:11px;color:var(--text3);background:var(--surface2);padding:4px 8px;border-radius:4px;">📝 ${resp.note}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <button class="btn-ghost" onclick="editNote('${r.id}','${resp.id}')">メモ編集</button>
+          <button class="btn-reject" onclick="deleteResp('${r.id}','${resp.id}')">削除</button>
+        </div>
+      </div>
+    </div>`).join('');
+  return `<div class="drawer-title"><span>リスク対応：${r.name}</span><button class="btn-ghost" onclick="aiSuggestResp('${r.id}')">Claude でリスク対応を提案</button></div>
+  <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">登録済みのリスク対応 <span style="font-weight:400;color:var(--text3);">(${resps.length}件)</span></div>
+  ${respHTML}
+  <button class="add-resp-btn" onclick="toggleFP('rf-${r.id}')">＋ リスク対応を追加</button>
+  <div class="fp" id="rf-${r.id}" style="margin-top:8px;">
+    <div class="ft" style="font-size:12px;">リスク対応の追加</div>
+    <div class="fg"><label class="fl">対応名</label><input type="text" id="rn-${r.id}" placeholder="例：MFAの全社展開"></div>
+    <div class="fg"><label class="fl">対応内容・手順</label><textarea id="rd-${r.id}" placeholder="具体的な対応内容" style="min-height:56px;"></textarea></div>
+    <div class="g2">
+      <div class="fg"><label class="fl">初期ステータス</label><select id="rs-${r.id}"><option value="none">未設定</option><option value="done">実施済み</option><option value="hold">保留中</option><option value="reject">却下</option></select></div>
+      <div class="fg"><label class="fl">メモ（任意）</label><input type="text" id="rm-${r.id}" placeholder="備考・期日など"></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;"><button class="btn btn-primary btn-sm" onclick="submitResp('${r.id}')">追加</button><button class="btn btn-sm" onclick="toggleFP('rf-${r.id}')">キャンセル</button></div>
+  </div>
+  <div id="ai-resp-${r.id}" style="display:none;" class="ai-box"></div>`;
+}
+
+function toggleDrawer(id) {
+  openDrawers.has(id)?openDrawers.delete(id):openDrawers.add(id);
+  renderRisks();
+  if(openDrawers.has(id)) setTimeout(()=>{const e=document.getElementById('drawer-'+id);if(e)e.scrollIntoView({behavior:'smooth',block:'nearest'});},50);
+}
+function setRespSt(rId,respId,st) {
+  const r=risks.find(x=>x.id===rId); const resp=r?.responses?.find(x=>x.id===respId); if(!resp)return;
+  resp.status=st; openDrawers.add(rId); renderRisks(); updateMetrics();
+  showToast({done:'実施済みに設定しました',hold:'保留中に設定しました',reject:'却下に設定しました'}[st]);
+}
+function submitResp(rId) {
+  const name=document.getElementById('rn-'+rId)?.value?.trim(); if(!name)return;
+  const r=risks.find(x=>x.id===rId); if(!r)return;
+  r.responses=r.responses||[];
+  r.responses.push({id:'r'+responseCounter++,name,desc:document.getElementById('rd-'+rId)?.value||'',status:document.getElementById('rs-'+rId)?.value||'none',note:document.getElementById('rm-'+rId)?.value||''});
+  openDrawers.add(rId); renderRisks(); updateMetrics(); showToast('リスク対応を追加しました');
+}
+function deleteResp(rId,respId) {
+  const r=risks.find(x=>x.id===rId); if(!r)return;
+  r.responses=r.responses.filter(x=>x.id!==respId); openDrawers.add(rId); renderRisks(); updateMetrics();
+}
+function editNote(rId,respId) {
+  const r=risks.find(x=>x.id===rId); const resp=r?.responses?.find(x=>x.id===respId); if(!resp)return;
+  const n=prompt('メモを編集：',resp.note||''); if(n!==null){resp.note=n;openDrawers.add(rId);renderRisks();}
+}
+
+// ============================================================
+// METRICS & CHARTS
+// ============================================================
+function updateMetrics() {
+  document.getElementById('a-total').textContent=assets.length;
+  document.getElementById('a-crit').textContent=assets.filter(a=>a.cls==='極秘'||a.cls==='機密').length;
+  document.getElementById('a-int').textContent=assets.filter(a=>a.cls==='社外秘').length;
+  document.getElementById('a-linked').textContent=assets.filter(a=>risks.some(r=>r.assetId===a.id)).length;
+  document.getElementById('r-total').textContent=risks.length;
+  document.getElementById('d-risks').textContent=risks.length;
+  document.getElementById('d-assets').textContent=assets.length;
+  document.getElementById('r-high').textContent=risks.filter(r=>r.impact+r.prob>=8).length;
+  let allR=[],done=0;
+  risks.forEach(r=>(r.responses||[]).forEach(x=>{allR.push(x);if(x.status==='done')done++;}));
+  const noAct=risks.filter(r=>!(r.responses||[]).length||(r.responses||[]).every(x=>x.status==='none')).length;
+  document.getElementById('d-noaction').textContent=noAct;
+  document.getElementById('r-done-cnt').textContent=done;
+  document.getElementById('d-done-rate').textContent=(allR.length>0?Math.round(done/allR.length*100):0)+'%';
+  updatePendingBadge();
+  // Charts
+  const cnt={'極秘':0,'機密':0,'社外秘':0,'公開':0};
+  assets.forEach(a=>{if(cnt[a.cls]!==undefined)cnt[a.cls]++;});
+  document.getElementById('d-chart').innerHTML=Object.entries(cnt).map(([k,v])=>`<div class="cr"><div class="cl2" style="width:46px;">${k}</div><div class="ct2"><div class="cf" style="width:${Math.round(v/assets.length*100)}%;background:${clsColor[k]};"></div></div><div class="cc">${v}</div></div>`).join('');
+  const rs={done:0,hold:0,reject:0,none:0};
+  risks.forEach(r=>(r.responses||[]).forEach(x=>rs[x.status]=(rs[x.status]||0)+1));
+  const tot=Object.values(rs).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('d-resp-chart').innerHTML=[['実施済み','#1E8449','done'],['保留中','#F57F17','hold'],['却下','#9E9E9E','reject'],['未設定','#BDBDBD','none']].map(([l,c,k])=>`<div class="cr"><div class="cl2" style="width:60px;">${l}</div><div class="ct2"><div class="cf" style="width:${Math.round(rs[k]/tot*100)}%;background:${c};"></div></div><div class="cc">${rs[k]}</div></div>`).join('');
+}
+function updatePendingBadge() {
+  const n=proposedRisks.length;
+  const b=document.getElementById('pending-badge');
+  b.style.display=n>0?'':'none'; b.textContent=n;
+  document.getElementById('r-pend').textContent=n;
+}
+
+// ============================================================
+// PROPOSALS
+// ============================================================
+function renderProposals() {
+  const sec=document.getElementById('prop-sec');
+  if(!proposedRisks.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  document.getElementById('prop-cnt').textContent=`${proposedRisks.length}件`;
+  document.getElementById('prop-list').innerHTML=proposedRisks.map(p=>`
+    <div class="rp-item ${p.sel?'on':''}" id="pp-${p.tid}">
+      <div class="rp-row">
+        <div class="rp-chk ${p.sel?'on':''}" onclick="toggleProp('${p.tid}')">${p.sel?'<svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>':''}</div>
+        <div class="rp-bd">
+          <div class="rp-name">${p.name}</div><div class="rp-desc">${p.desc}</div>
+          <div class="rp-tags"><span class="rp-tag tag-cia">${p.cia}</span><span class="rp-tag tag-act">対応策：${p.action}</span><span class="rp-tag tag-iso">ISO ${p.iso}</span><span class="tag">関連資産：${p.assetName}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;"><button class="btn btn-green btn-sm" onclick="adoptOne('${p.tid}')">採用</button><button class="btn-reject" onclick="rejectOne('${p.tid}')">非採用</button></div>
+      </div>
+    </div>`).join('');
+  updatePendingBadge();
+}
+function toggleProp(tid){const p=proposedRisks.find(x=>x.tid===tid);if(!p)return;p.sel=!p.sel;renderProposals();}
+function adoptOne(tid){
+  const p=proposedRisks.find(x=>x.tid===tid);if(!p)return;
+  const id='R-'+String(riskCounter++).padStart(3,'0');
+  risks.push({id,name:p.name,assetId:p.assetId,assetName:p.assetName,cia:p.cia,cat:'技術',impact:p.impact,prob:p.prob,source:'proposed',responses:[{id:'r'+responseCounter++,name:p.action,desc:'自動提案からの初期対応策',status:'none',note:''}]});
+  proposedRisks=proposedRisks.filter(x=>x.tid!==tid);
+  renderProposals();renderRisks();renderAssets();showToast('リスクを採用しました');
+}
+function rejectOne(tid){proposedRisks=proposedRisks.filter(x=>x.tid!==tid);renderProposals();updatePendingBadge();}
+function adoptAll(){
+  proposedRisks.forEach(p=>{const id='R-'+String(riskCounter++).padStart(3,'0');risks.push({id,name:p.name,assetId:p.assetId,assetName:p.assetName,cia:p.cia,cat:'技術',impact:p.impact,prob:p.prob,source:'proposed',responses:[{id:'r'+responseCounter++,name:p.action,desc:'自動提案からの初期対応策',status:'none',note:''}]});});
+  proposedRisks=[];renderProposals();renderRisks();renderAssets();showToast('すべて採用しました');
+}
+function rejectAll(){proposedRisks=[];renderProposals();updatePendingBadge();}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(assetId) {
+  if(currentUser?.role!=='admin'){showToast('管理者のみリスク提案を追加できます');return;}
+  const a=assets.find(x=>x.id===assetId);if(!a)return;
+  const existing=risks.filter(r=>r.assetId===assetId).map(r=>r.name);
+  const pending=proposedRisks.filter(p=>p.assetId===assetId).map(p=>p.name);
+  const tmpls=(RISK_TMPL[a.cat]||[]).filter(t=>!existing.includes(t.name)&&!pending.includes(t.name));
+  document.getElementById('m-title').textContent=`リスク自動提案：${a.name}`;
+  document.getElementById('m-sub').textContent=`カテゴリ「${a.cat}」/ ${a.cls} — ISO 27001 付属書Aに基づくリスク候補`;
+  if(!tmpls.length){document.getElementById('m-body').innerHTML='<div style="text-align:center;padding:32px;color:#bbb;">このカテゴリのリスクはすべて登録済みまたは提案済みです</div>';document.getElementById('m-info').textContent='';modalProposals=[];}
+  else {
+    modalProposals=tmpls.map((t,i)=>({...t,tid:`m_${assetId}_${i}`,sel:true,assetId,assetName:a.name}));
+    renderModalList();
+  }
+  document.getElementById('modal-bg').classList.add('open');
+}
+function renderModalList(){
+  const sel=modalProposals.filter(p=>p.sel).length;
+  document.getElementById('m-info').textContent=`${sel}/${modalProposals.length}件を選択中`;
+  document.getElementById('m-body').innerHTML=modalProposals.map(p=>`
+    <div class="rp-item ${p.sel?'on':''}" id="mp-${p.tid}">
+      <div class="rp-row">
+        <div class="rp-chk ${p.sel?'on':''}" onclick="toggleModal('${p.tid}')">${p.sel?'<svg width="9" height="9" viewBox="0 0 9 9"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>':''}</div>
+        <div class="rp-bd">
+          <div class="rp-name">${p.name}</div><div class="rp-desc">${p.desc}</div>
+          <div class="rp-tags"><span class="rp-tag tag-cia">${p.cia}</span><span class="rp-tag tag-act">初期対応策：${p.action}</span><span class="rp-tag tag-iso">ISO ${p.iso}</span><span class="badge ${p.impact>=4?'b-high':p.impact>=3?'b-med':'b-low'}" style="font-size:10px;">影響度${p.impact}/可能性${p.prob}</span></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleModal(tid){const p=modalProposals.find(x=>x.tid===tid);if(!p)return;p.sel=!p.sel;renderModalList();}
+function adoptFromModal(){
+  proposedRisks.push(...modalProposals.filter(p=>p.sel).map(p=>({...p,tid:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2)})));
+  closeModal();showPage('risk',document.querySelector('[data-page="risk"]'));renderProposals();updatePendingBadge();
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');modalProposals=[];}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+  if(name==='risk'){renderProposals();populateAsel();}
+  if(name==='users'){renderUsers();}
+  if(name==='audit'){renderAuditPage();}
+  if(name==='mgmt-review'){renderMRPage();}
+  if(name==='education'){renderEducation();showEduTab('programs');}
+  if(name==='ai-systems'){renderAIS();populateAirSysSel();}
+  if(name==='ai-impact'){renderAIIA();}
+  if(name==='ai-risk'){renderAIRisk();populateAirSysSel();}
+}
+function gotoRisk(id){showPage('risk',document.querySelector('[data-page="risk"]'));openDrawers.add(id);renderRisks();setTimeout(()=>{const e=document.getElementById('rrow-'+id);if(e){e.style.background='#FFFDE7';e.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>e.style.background='',2000);}},100);}
+function gotoAsset(id){if(!id)return;filteredAssets=[...assets];showPage('assets',document.querySelector('[data-page="assets"]'));setTimeout(()=>renderAssets(),50);}
+function toggleFP(id){const f=document.getElementById(id);if(f)f.style.display=f.style.display==='block'?'none':'block';}
+
+function filterA(){
+  const cat=document.getElementById('f-cat').value,cls=document.getElementById('f-cls').value,q=document.getElementById('f-q').value.toLowerCase();
+  filteredAssets=assets.filter(a=>(!cat||a.cat===cat)&&(!cls||a.cls===cls)&&(!q||a.name.toLowerCase().includes(q)));
+  renderAssets();
+}
+function submitAsset(){
+  if(currentUser?.role!=='admin'){showToast('資産の登録は管理者のみ可能です');return;}
+  const name=document.getElementById('a-name').value.trim();if(!name)return;
+  const cat=document.getElementById('a-cat').value;
+  const a={id:'A-'+String(assets.length+1).padStart(3,'0'),name,cat,cls:document.getElementById('a-cls').value,dept:document.getElementById('a-dept').value||'未設定',owner:document.getElementById('a-owner').value||'未設定',loc:document.getElementById('a-loc').value||'未設定',desc:document.getElementById('a-desc').value||''};
+  assets.unshift(a);filteredAssets=[...assets];toggleFP('af');renderAssets();openModal(a.id);
+}
+function addRiskManual(){
+  const name=document.getElementById('rn').value.trim();if(!name)return;
+  const sel=document.getElementById('r-asel');
+  const assetId=sel.value||null,assetName=sel.value?(assets.find(a=>a.id===sel.value)?.name||'—'):'—';
+  const id='R-'+String(riskCounter++).padStart(3,'0');
+  risks.push({id,name,assetId,assetName,cia:document.getElementById('r-cia').value,cat:document.getElementById('r-cat').value,impact:parseInt(document.getElementById('r-imp').value)||3,prob:parseInt(document.getElementById('r-prb').value)||3,source:'manual',responses:[{id:'r'+responseCounter++,name:document.getElementById('r-act').value||'対応策を検討',desc:'初期登録時の対応策',status:'none',note:''}]});
+  toggleFP('r-add-form');renderRisks();renderAssets();showToast('リスクを追加しました');
+}
+function populateAsel(){
+  const sel=document.getElementById('r-asel');
+  sel.innerHTML='<option value="">（資産を選択）</option>'+assets.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+}
+
+// ============================================================
+// INTERNAL AUDIT ENGINE
+// ============================================================
+const CHECK_TEMPLATES = {
+  general: [
+    {label:'情報セキュリティ方針が文書化・承認されている',iso:'A.5.1',result:'none',note:''},
+    {label:'情報セキュリティ方針が全従業員に周知されている',iso:'A.5.1',result:'none',note:''},
+    {label:'情報資産が識別・分類されている',iso:'A.8.1',result:'none',note:''},
+    {label:'アクセス制御方針が定義されている',iso:'A.9.1',result:'none',note:''},
+    {label:'利用者アクセス権限の付与・変更・失効の手順がある',iso:'A.9.2',result:'none',note:''},
+    {label:'パスワード管理方針が整備されている',iso:'A.9.3',result:'none',note:''},
+    {label:'クリアデスク・クリアスクリーンが実施されている',iso:'A.11.2',result:'none',note:''},
+    {label:'情報セキュリティに関する教育・訓練が実施されている',iso:'A.7.2',result:'none',note:''},
+    {label:'インシデント報告の手順・連絡先が周知されている',iso:'A.16.1',result:'none',note:''},
+  ],
+  it: [
+    {label:'特権アカウントが適切に管理されている',iso:'A.9.2',result:'none',note:''},
+    {label:'ネットワーク分離・アクセス制御が設定されている',iso:'A.13.1',result:'none',note:''},
+    {label:'脆弱性管理・パッチ適用の手順がある',iso:'A.12.6',result:'none',note:''},
+    {label:'マルウェア対策が導入・更新されている',iso:'A.12.2',result:'none',note:''},
+    {label:'ログ取得・監視の設定がされている',iso:'A.12.4',result:'none',note:''},
+    {label:'バックアップが定期的に実施・検証されている',iso:'A.12.3',result:'none',note:''},
+    {label:'変更管理プロセスに基づいてシステム変更が行われている',iso:'A.12.1',result:'none',note:''},
+    {label:'クラウドサービスの利用方針が整備されている',iso:'A.15.1',result:'none',note:''},
+    {label:'暗号化方針が定義・適用されている',iso:'A.10.1',result:'none',note:''},
+    {label:'情報システムの受入れ基準が定義されている',iso:'A.14.2',result:'none',note:''},
+  ],
+  hr: [
+    {label:'雇用前のバックグラウンド確認手順がある',iso:'A.7.1',result:'none',note:''},
+    {label:'雇用契約に情報セキュリティの責任が含まれている',iso:'A.7.1',result:'none',note:''},
+    {label:'情報セキュリティに関する懲戒手順がある',iso:'A.7.2',result:'none',note:''},
+    {label:'退職時のアクセス権失効手順が遵守されている',iso:'A.7.3',result:'none',note:''},
+    {label:'人事情報（給与・評価）へのアクセス制御が適切',iso:'A.9.2',result:'none',note:''},
+    {label:'個人情報の取扱い手順が整備されている',iso:'A.18.1',result:'none',note:''},
+    {label:'年次セキュリティ研修の受講率が基準を満たしている',iso:'A.7.2',result:'none',note:''},
+  ],
+  sales: [
+    {label:'顧客情報の取扱い・保管方針が定義されている',iso:'A.8.2',result:'none',note:''},
+    {label:'外出時の情報持ち出しルールが周知されている',iso:'A.11.2',result:'none',note:''},
+    {label:'モバイルデバイスのセキュリティ設定がされている',iso:'A.6.2',result:'none',note:''},
+    {label:'USBメモリ等の外部記録媒体の利用ルールがある',iso:'A.8.3',result:'none',note:''},
+    {label:'メールの誤送信防止策が実施されている',iso:'A.13.2',result:'none',note:''},
+    {label:'第三者への情報提供時にNDAが締結されている',iso:'A.15.1',result:'none',note:''},
+    {label:'営業資料の機密区分が適切に管理されている',iso:'A.8.2',result:'none',note:''},
+  ],
+  dev: [
+    {label:'セキュアコーディング規約が整備・遵守されている',iso:'A.14.2',result:'none',note:''},
+    {label:'開発・テスト・本番環境が分離されている',iso:'A.12.1',result:'none',note:''},
+    {label:'本番データをテスト環境で使用していない',iso:'A.14.3',result:'none',note:''},
+    {label:'ソースコード管理ツールのアクセス権が適切',iso:'A.9.2',result:'none',note:''},
+    {label:'依存ライブラリの脆弱性チェックが行われている',iso:'A.12.6',result:'none',note:''},
+    {label:'コードレビュー手順が定義・実施されている',iso:'A.14.2',result:'none',note:''},
+    {label:'リリース前のセキュリティテストが実施されている',iso:'A.14.2',result:'none',note:''},
+    {label:'APIキー・認証情報がコードに含まれていない',iso:'A.9.4',result:'none',note:''},
+  ],
+};
+
+let auditYears = []; // [{id, year, start, end, auditor, scope, depts:[{id, name, auditee, auditor, items:[{label,iso,result,note}], note}]}]
+let currentAuditYear = null;
+let editDeptId = null;
+let tempCheckItems = [];
+
+function initAudit() {
+  // Seed sample data
+  auditYears = [{
+    id:'AY-2026', year:2026, start:'2026-04-01', end:'2026-06-30',
+    auditor:'山田 太郎', scope:'情報セキュリティ管理システム全体の有効性確認',
+    depts:[
+      {id:'D1', name:'情報システム部', auditee:'鈴木 一郎', auditor:'山田 太郎',
+       items:CHECK_TEMPLATES.it.map((x,i)=>({...x,id:'i'+i})),
+       note:''},
+      {id:'D2', name:'営業部', auditee:'中村 三郎', auditor:'佐藤 花子',
+       items:CHECK_TEMPLATES.sales.map((x,i)=>({...x,id:'s'+i})),
+       note:''},
+      {id:'D3', name:'人事部', auditee:'田中 次郎', auditor:'山田 太郎',
+       items:CHECK_TEMPLATES.hr.map((x,i)=>({...x,id:'h'+i})),
+       note:''},
+    ]
+  }];
+  // Pre-fill some results for demo
+  auditYears[0].depts[0].items[0].result='ok';
+  auditYears[0].depts[0].items[1].result='ok';
+  auditYears[0].depts[0].items[2].result='ng';
+  auditYears[0].depts[0].items[2].note='ログ保存期間が90日未満。要改善';
+  auditYears[0].depts[0].items[3].result='ok';
+  auditYears[0].depts[1].items[0].result='ok';
+  auditYears[0].depts[1].items[4].result='ng';
+  auditYears[0].depts[1].items[4].note='メール誤送信防止ツール未導入';
+  renderAuditYearSel();
+  renderAuditPage();
+}
+
+function renderAuditYearSel() {
+  const sel = document.getElementById('audit-year-sel');
+  if (!sel) return;
+  const years = [...new Set(auditYears.map(a=>a.year))].sort((a,b)=>b-a);
+  // Add future years to selector
+  const nowY = new Date().getFullYear();
+  const allY = [...new Set([...years, nowY, nowY+1])].sort((a,b)=>b-a);
+  sel.innerHTML = auditYears.length === 0
+    ? '<option value="">年度なし</option>'
+    : auditYears.sort((a,b)=>b.year-a.year).map(a=>`<option value="${a.id}">${a.year}年度</option>`).join('');
+  if (auditYears.length && !currentAuditYear) currentAuditYear = auditYears.sort((a,b)=>b.year-a.year)[0].id;
+  if (currentAuditYear) sel.value = currentAuditYear;
+}
+
+function onAuditYearChange() {
+  currentAuditYear = document.getElementById('audit-year-sel').value;
+  renderAuditPage();
+}
+
+function renderAuditPage() {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  const empty = document.getElementById('audit-empty');
+  const overview = document.getElementById('audit-year-overview');
+  if (!yd) { empty.style.display='block'; overview.style.display='none'; return; }
+  empty.style.display='none'; overview.style.display='block';
+  // Title
+  document.getElementById('audit-year-title').textContent = `${yd.year}年度 内部監査`;
+  document.getElementById('audit-year-meta').textContent = `期間：${yd.start} ～ ${yd.end}　主任監査員：${yd.auditor}　範囲：${yd.scope||'—'}`;
+  // Metrics
+  const allItems = yd.depts.flatMap(d=>d.items);
+  const checked = allItems.filter(i=>i.result!=='none').length;
+  const ok = allItems.filter(i=>i.result==='ok').length;
+  const ng = allItems.filter(i=>i.result==='ng').length;
+  const conformRate = allItems.length ? Math.round(ok/allItems.length*100) : 0;
+  document.getElementById('audit-metrics-row').innerHTML = `
+    <div class="metric"><div class="mlb">対象部署数</div><div class="mv pur">${yd.depts.length}</div></div>
+    <div class="metric"><div class="mlb">総チェック項目</div><div class="mv blu">${allItems.length}</div></div>
+    <div class="metric"><div class="mlb">指摘件数 (NG)</div><div class="mv red">${ng}</div></div>
+    <div class="metric"><div class="mlb">適合率</div><div class="mv grn">${conformRate}%</div></div>`;
+  // Dept list
+  document.getElementById('dept-audit-list').innerHTML = yd.depts.map(d => renderDeptCard(d)).join('') || '<div style="color:var(--text3);padding:20px;text-align:center;">部署が登録されていません</div>';
+}
+
+function renderDeptCard(d) {
+  const total = d.items.length;
+  const done = d.items.filter(i=>i.result!=='none').length;
+  const ok = d.items.filter(i=>i.result==='ok').length;
+  const ng = d.items.filter(i=>i.result==='ng').length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const dotColor = ng>0 ? '#C0392B' : pct===100 ? '#1E8449' : pct>0 ? '#F57F17' : '#BDBDBD';
+  const statusLabel = ng>0 ? `指摘${ng}件` : pct===100 ? '完了' : pct>0 ? '進行中' : '未着手';
+  const statusBadge = ng>0?'b-high':pct===100?'b-approved':pct>0?'b-review':'b-draft';
+  return `<div class="dept-audit-card">
+    <div class="dept-audit-head" onclick="toggleDeptCard('${d.id}')">
+      <div class="dept-status-dot" style="background:${dotColor};"></div>
+      <div class="dept-info">
+        <div class="dept-name">${d.name}</div>
+        <div class="dept-meta">被監査者：${d.auditee}　監査員：${d.auditor}</div>
+      </div>
+      <span class="badge ${statusBadge}" style="margin-right:8px;">${statusLabel}</span>
+      <div class="dept-prog-wrap">
+        <div class="dept-prog-bar"><div class="dept-prog-fill" style="width:${pct}%;background:${dotColor};"></div></div>
+        <div class="dept-prog-txt" style="color:${dotColor};">${done}/${total}</div>
+      </div>
+      <button class="btn btn-sm" style="margin-left:10px;" onclick="event.stopPropagation();openDeptDetail('${d.id}')">詳細・記録</button>
+      <button class="btn-ghost admin-only" style="margin-left:4px;" onclick="event.stopPropagation();removeDept('${d.id}')">削除</button>
+    </div>
+    <div class="dept-audit-body" id="dbody-${d.id}">
+      ${renderDeptInlineItems(d)}
+    </div>
+  </div>`;
+}
+
+function renderDeptInlineItems(d) {
+  return d.items.slice(0,4).map(item=>`
+    <div class="audit-check-row">
+      <div class="ac-result">
+        <button class="ac-btn ok ${item.result==='ok'?'active':''}" onclick="setCheckResult('${currentAuditYear}','${d.id}','${item.id}','ok')">適合</button>
+        <button class="ac-btn ng ${item.result==='ng'?'active':''}" onclick="setCheckResult('${currentAuditYear}','${d.id}','${item.id}','ng')">指摘</button>
+        <button class="ac-btn na ${item.result==='na'?'active':''}" onclick="setCheckResult('${currentAuditYear}','${d.id}','${item.id}','na')">N/A</button>
+      </div>
+      <div class="ac-label">${item.label}<span class="ac-iso"> (${item.iso})</span></div>
+      ${item.result==='ng'?`<input class="ac-note-input" placeholder="指摘内容" value="${item.note||''}" onchange="setCheckNote('${currentAuditYear}','${d.id}','${item.id}',this.value)">`:''}
+    </div>`).join('')
+  + (d.items.length>4?`<div style="font-size:11px;color:var(--text3);padding:6px 0;">他 ${d.items.length-4} 件の項目は「詳細・記録」から確認できます</div>`:'');
+}
+
+function toggleDeptCard(dId) {
+  const b = document.getElementById('dbody-'+dId);
+  if (b) b.classList.toggle('open');
+}
+
+function setCheckResult(yearId, dId, itemId, result) {
+  const yd = auditYears.find(a=>a.id===yearId);
+  const d = yd?.depts.find(x=>x.id===dId);
+  const item = d?.items.find(x=>x.id===itemId);
+  if (!item) return;
+  item.result = item.result===result ? 'none' : result;
+  renderAuditPage();
+  // Re-open drawer
+  setTimeout(()=>{ const b=document.getElementById('dbody-'+dId); if(b)b.classList.add('open'); },10);
+}
+
+function setCheckNote(yearId, dId, itemId, note) {
+  const yd = auditYears.find(a=>a.id===yearId);
+  const d = yd?.depts.find(x=>x.id===dId);
+  const item = d?.items.find(x=>x.id===itemId);
+  if (item) item.note = note;
+}
+
+function removeDept(dId) {
+  if (!confirm('この部署の監査記録を削除しますか？')) return;
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  if (yd) { yd.depts = yd.depts.filter(d=>d.id!==dId); renderAuditPage(); }
+}
+
+// ----- New Year Modal -----
+function openNewAuditModal() {
+  const sel = document.getElementById('na-year');
+  const nowY = new Date().getFullYear();
+  sel.innerHTML = [nowY-1,nowY,nowY+1,nowY+2].map(y=>`<option value="${y}" ${y===nowY?'selected':''}>${y}年度</option>`).join('');
+  document.getElementById('na-start').value = `${nowY}-04-01`;
+  document.getElementById('na-end').value = `${nowY}-09-30`;
+  document.getElementById('na-auditor').value = currentUser?.displayName||'';
+  document.getElementById('na-scope').value = '';
+  document.getElementById('new-audit-modal').classList.add('open');
+}
+
+function createAuditYear() {
+  const year = parseInt(document.getElementById('na-year').value);
+  if (auditYears.find(a=>a.year===year)) { showToast('その年度はすでに存在します'); return; }
+  const id = 'AY-'+year;
+  auditYears.push({id, year, start:document.getElementById('na-start').value, end:document.getElementById('na-end').value, auditor:document.getElementById('na-auditor').value, scope:document.getElementById('na-scope').value, depts:[]});
+  currentAuditYear = id;
+  renderAuditYearSel();
+  closeAuditModal('new-audit-modal');
+  renderAuditPage();
+  showToast(`${year}年度の内部監査を作成しました`);
+  openAddDeptModal();
+}
+
+// ----- Add Dept Modal -----
+let tempCheckIdCounter = 0;
+function openAddDeptModal() {
+  editDeptId = null;
+  document.getElementById('add-dept-title').textContent = '部署の追加';
+  document.getElementById('ad-dept').value='';
+  document.getElementById('ad-auditee').value='';
+  document.getElementById('ad-auditor').value = currentUser?.displayName||'';
+  document.getElementById('ad-tmpl').value='';
+  tempCheckItems = [...CHECK_TEMPLATES.general.map((x,i)=>({...x,id:'tc'+tempCheckIdCounter++}))];
+  renderTempChecklist();
+  document.getElementById('add-dept-modal').classList.add('open');
+}
+
+function loadCheckTemplate() {
+  const tmpl = document.getElementById('ad-tmpl').value;
+  if (!tmpl) return;
+  const base = CHECK_TEMPLATES[tmpl] || [];
+  tempCheckItems = base.map(x=>({...x,id:'tc'+tempCheckIdCounter++}));
+  renderTempChecklist();
+}
+
+function renderTempChecklist() {
+  const el = document.getElementById('ad-checklist-items');
+  el.innerHTML = tempCheckItems.map((item,idx)=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;font-size:11px;">${item.label}</div>
+      <span style="font-size:10px;color:var(--text3);flex-shrink:0;">${item.iso}</span>
+      <button style="background:none;border:none;cursor:pointer;color:#C0392B;font-size:12px;padding:0 4px;" onclick="removeCheckItem('${item.id}')">✕</button>
+    </div>`).join('')
+  + (tempCheckItems.length===0?'<div style="color:var(--text3);text-align:center;padding:12px;font-size:11px;">項目がありません</div>':'');
+}
+
+function removeCheckItem(id) {
+  tempCheckItems = tempCheckItems.filter(x=>x.id!==id);
+  renderTempChecklist();
+}
+
+function addCheckItem() {
+  const label = prompt('監査項目を入力してください：');
+  if (!label) return;
+  const iso = prompt('ISO条項番号（例：A.9.2）：') || 'A.—';
+  tempCheckItems.push({id:'tc'+tempCheckIdCounter++, label, iso, result:'none', note:''});
+  renderTempChecklist();
+}
+
+function saveDeptAudit() {
+  const name = document.getElementById('ad-dept').value.trim();
+  if (!name) { showToast('部署名を入力してください'); return; }
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  if (!yd) return;
+  const d = {
+    id: 'D'+Date.now(),
+    name,
+    auditee: document.getElementById('ad-auditee').value||'—',
+    auditor: document.getElementById('ad-auditor').value||'—',
+    items: tempCheckItems.map(x=>({...x})),
+    note: ''
+  };
+  yd.depts.push(d);
+  closeAuditModal('add-dept-modal');
+  renderAuditPage();
+  showToast(`「${name}」の監査チェックリストを追加しました`);
+}
+
+// ----- Dept Detail Modal -----
+let detailDeptId = null;
+function openDeptDetail(dId) {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  const d = yd?.depts.find(x=>x.id===dId);
+  if (!d) return;
+  detailDeptId = dId;
+  document.getElementById('dd-title').textContent = d.name + '　内部監査';
+  document.getElementById('dd-sub').textContent = `被監査者：${d.auditee}　監査員：${d.auditor}　${d.items.length}項目`;
+  renderDeptDetailTable(d);
+  document.getElementById('ai-dept-audit').innerHTML = '<span style="color:#bbb;font-style:italic;">「Claude で所見を生成」を押すと監査結果の分析・所見案を生成します</span>';
+  document.getElementById('dept-detail-modal').classList.add('open');
+}
+
+function renderDeptDetailTable(d) {
+  const tb = document.getElementById('dd-tbody');
+  tb.innerHTML = d.items.map(item=>`
+    <tr>
+      <td style="text-align:center;vertical-align:middle;">
+        <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+          <button class="ac-btn ok ${item.result==='ok'?'active':''}" style="font-size:9px;padding:2px 6px;" onclick="setDetailResult('${d.id}','${item.id}','ok')">適合</button>
+          <button class="ac-btn ng ${item.result==='ng'?'active':''}" style="font-size:9px;padding:2px 6px;" onclick="setDetailResult('${d.id}','${item.id}','ng')">指摘</button>
+          <button class="ac-btn na ${item.result==='na'?'active':''}" style="font-size:9px;padding:2px 6px;" onclick="setDetailResult('${d.id}','${item.id}','na')">N/A</button>
+        </div>
+      </td>
+      <td style="font-size:12px;">${item.label}</td>
+      <td style="font-size:11px;color:var(--text3);">${item.iso}</td>
+      <td style="text-align:center;">${item.result==='ok'?'<span class="result-ok">適合</span>':item.result==='ng'?'<span class="result-ng">指摘</span>':item.result==='na'?'<span class="result-na">N/A</span>':'<span style="color:#bbb;">—</span>'}</td>
+      <td><input class="ac-note-input" style="width:100%;" placeholder="${item.result==='ng'?'指摘内容を記入':'所見・備考'}" value="${item.note||''}" onchange="setDetailNote('${d.id}','${item.id}',this.value)"></td>
+    </tr>`).join('');
+}
+
+function setDetailResult(dId, itemId, result) {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  const d = yd?.depts.find(x=>x.id===dId);
+  const item = d?.items.find(x=>x.id===itemId);
+  if (!item) return;
+  item.result = item.result===result ? 'none' : result;
+  renderDeptDetailTable(d);
+  renderAuditPage();
+}
+
+function setDetailNote(dId, itemId, note) {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  const d = yd?.depts.find(x=>x.id===dId);
+  const item = d?.items.find(x=>x.id===itemId);
+  if (item) item.note = note;
+}
+
+async function aiAuditDept() {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  const d = yd?.depts.find(x=>x.id===detailDeptId);
+  if (!d) return;
+  const el = document.getElementById('ai-dept-audit');
+  el.innerHTML = '<div class="ai-lbl">Claude 分析中...</div><span style="color:#bbb;font-style:italic;">所見を生成しています...</span>';
+  const ng = d.items.filter(i=>i.result==='ng').map(i=>`・${i.label}（${i.iso}）：${i.note||'指摘事項あり'}`).join('\n');
+  const ok = d.items.filter(i=>i.result==='ok').length;
+  const total = d.items.length;
+  const t = await callClaude(`部署「${d.name}」の内部監査結果：全${total}項目中適合${ok}件・指摘${d.items.filter(i=>i.result==='ng').length}件。指摘事項：\n${ng||'なし'}。この結果に基づく所見、是正勧告、優先対応事項を教えてください。`);
+  el.innerHTML = `<div class="ai-lbl">Claude 監査所見</div><div style="white-space:pre-wrap;">${t}</div>`;
+}
+
+async function genAuditReport() {
+  const yd = auditYears.find(a=>a.id===currentAuditYear);
+  if (!yd) return;
+  const el = document.getElementById('ai-audit');
+  el.style.display = 'block';
+  setL('ai-audit');
+  const summary = yd.depts.map(d=>{
+    const ng = d.items.filter(i=>i.result==='ng');
+    return `【${d.name}】適合${d.items.filter(i=>i.result==='ok').length}/${d.items.length}件、指摘${ng.length}件${ng.length?('（'+ng.map(i=>i.label).join('、')+'）'):''}`;
+  }).join('\n');
+  const t = await callClaude(`${yd.year}年度内部監査の総合報告書の骨子を生成してください。監査期間：${yd.start}〜${yd.end}、主任監査員：${yd.auditor}。\n部署別サマリー：\n${summary}\nISO 27001 Clause 9.2に基づく報告書の構成（目的・範囲・実施概要・総合評価・主要指摘事項・改善勧告）を提供してください。`);
+  setR('ai-audit', t);
+}
+
+function closeAuditModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Override auditSummary to use new system
+function auditSummary() { genAuditReport(); }
+
+// ============================================================
+// CLAUDE API
+// ============================================================
+async function callClaude(p){
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'あなたはISMS専門家です。ISO 27001に基づき、簡潔で実用的なアドバイスを日本語200字以内で提供してください。',messages:[{role:'user',content:p}]})});const d=await r.json();return d.content?.[0]?.text||'エラーが発生しました';}catch(e){return 'API接続エラー: '+e.message;}
+}
+function setL(id){const e=document.getElementById(id);if(!e)return;e.style.display='block';e.innerHTML='<div class="ai-lbl">Claude 分析中...</div><span style="color:#bbb;font-style:italic;">分析しています...</span>';}
+function setR(id,t){const e=document.getElementById(id);if(!e)return;e.innerHTML=`<div class="ai-lbl">Claude 分析結果</div><div>${t}</div>`;}
+
+async function analyzeOverall(){setL('ai-dashboard');const rs=risks.reduce((a,r)=>{(r.responses||[]).forEach(x=>a[x.status]=(a[x.status]||0)+1);return a;},{});const t=await callClaude(`ISMS状況：資産${assets.length}件、リスク${risks.length}件（高リスク${risks.filter(r=>r.impact+r.prob>=8).length}件）、対応：実施済み${rs.done||0}・保留中${rs.hold||0}・却下${rs.reject||0}・未設定${rs.none||0}件。優先対応事項を教えてください。`);setR('ai-dashboard',t);}
+async function assessRisk(){const i=document.getElementById('risk-input').value;if(!i.trim())return;setL('ai-risk');const t=await callClaude(`リスク評価：「${i}」。影響度・可能性（1-5）、リスクレベル、推奨対応策を教えてください。`);document.getElementById('ai-risk').style.display='block';setR('ai-risk',t);}
+async function aiAnalyzeRisk(id){const r=risks.find(x=>x.id===id);if(!r)return;openDrawers.add(id);renderRisks();const el=document.getElementById('ai-resp-'+id);if(!el)return;el.style.display='block';el.innerHTML='<div class="ai-lbl">Claude 分析中...</div><span style="color:#bbb;font-style:italic;">分析中...</span>';const t=await callClaude(`リスク「${r.name}」（${r.cia}、影響度${r.impact}、可能性${r.prob}）の詳細分析と優先対応策を教えてください。`);el.innerHTML=`<div class="ai-lbl">Claude 分析結果</div><div>${t}</div>`;}
+async function aiSuggestResp(id){const r=risks.find(x=>x.id===id);if(!r)return;openDrawers.add(id);renderRisks();const el=document.getElementById('ai-resp-'+id);if(!el)return;el.style.display='block';el.innerHTML='<div class="ai-lbl">Claude 提案中...</div><span style="color:#bbb;font-style:italic;">提案を生成しています...</span>';const ex=(r.responses||[]).map(x=>x.name).join('、');const t=await callClaude(`リスク「${r.name}」（CIA：${r.cia}）に対するリスク対応策を3つ提案してください。既存対応：${ex||'なし'}。各対応策に対応名・内容・推奨判断（実施済み/保留中/却下の目安）を含めてください。`);el.innerHTML=`<div class="ai-lbl">Claude リスク対応提案</div><div>${t}</div>`;}
+async function draftDoc(){setL('ai-docs');const t=await callClaude('ISO 27001準拠の「クラウドサービス利用セキュリティポリシー」の目次と主要条項骨格を作成してください。');setR('ai-docs',t);}
+async function reviewDoc(n){setL('ai-docs');const t=await callClaude(`「${n}」のISO 27001観点でのレビューポイントと改善提案を教えてください。`);setR('ai-docs',t);}
+async function auditSummary(){const d=CL.filter(i=>i.checked).length;setL('ai-audit');const t=await callClaude(`内部監査：全8項目中${d}項目適合。未適合への是正措置の優先順位を教えてください。`);setR('ai-audit',t);}
+async function incAdvice(i){setL('ai-incident');const t=await callClaude(`インシデント：${i}。初動・調査・再発防止のアドバイスをください。`);setR('ai-incident',t);}
+async function submitInc(){const title=document.getElementById('inc-title').value.trim();if(!title)return;const cat=document.getElementById('inc-cat').value,desc=document.getElementById('inc-desc').value;const tb=document.getElementById('inc-tbody');const id='INC-00'+(tb.rows.length+1),today=new Date().toISOString().split('T')[0];const tr=document.createElement('tr');tr.innerHTML=`<td>${id}</td><td>${title}</td><td>${cat}</td><td>${today}</td><td><span class="badge b-open">対応中</span></td><td>${currentUser?.displayName||'自分'}</td><td><button class="btn-ghost" onclick="incAdvice('${title}：${desc}')">AI対応策</button></td>`;tb.insertBefore(tr,tb.firstChild);toggleFP('inc-form');setL('ai-incident');const t=await callClaude(`新規インシデント「${title}」（${cat}）：${desc}`);setR('ai-incident',t);}
+
+// ============================================================
+// EDUCATION ENGINE
+// ============================================================
+let eduPrograms = [];
+let eduRecords  = [];
+let eduProgCounter = 1;
+let eduRecCounter  = 1;
+let currentTestProg = null;
+let testQuestions = [];
+let testAnswers   = {};
+
+const PROG_ICONS = { 'ISMS基礎':'🛡️', 'AIMS・AI倫理':'🤖', '技術・実務':'⚙️', 'コンプライアンス':'📋', 'インシデント対応':'🚨', 'その他':'📚' };
+
+function initEducation() {
+  eduPrograms = [
+    { id:'P-001', name:'情報セキュリティ年次研修', cat:'ISMS基礎', target:'全従業員', freq:'年1回', duration:60, nextDate:'2026-09-01', passScore:80, desc:'ISO 27001に基づく情報セキュリティの基礎知識・社内ポリシーの確認' },
+    { id:'P-002', name:'フィッシング対策訓練',     cat:'インシデント対応', target:'全従業員', freq:'年2回', duration:30, nextDate:'2026-07-01', passScore:70, desc:'フィッシングメールの見分け方・報告手順の実践訓練' },
+    { id:'P-003', name:'AIの責任ある利用研修',     cat:'AIMS・AI倫理', target:'全従業員', freq:'年1回', duration:45, nextDate:'2026-10-01', passScore:75, desc:'生成AIの業務利用ガイドライン・バイアス・プライバシーリスクの理解' },
+    { id:'P-004', name:'管理職セキュリティ研修',   cat:'ISMS基礎', target:'管理職・リーダー', freq:'年1回', duration:120, nextDate:'2026-08-01', passScore:85, desc:'リスクマネジメント・インシデント対応指揮・部門管理責任の習得' },
+    { id:'P-005', name:'新入社員セキュリティ研修', cat:'ISMS基礎', target:'新入社員', freq:'入社時のみ', duration:90, nextDate:'随時', passScore:80, desc:'入社時の情報セキュリティ基礎・社内ルール・機器の取り扱い' },
+  ];
+  eduRecords = [
+    { id:'R-001', progId:'P-001', progName:'情報セキュリティ年次研修', userId:'admin',  userName:'システム管理者', dept:'情報システム部', date:'2026-03-01', score:95, passed:true },
+    { id:'R-002', progId:'P-001', progName:'情報セキュリティ年次研修', userId:'yamada', userName:'山田 太郎',     dept:'情報システム部', date:'2026-03-01', score:88, passed:true },
+    { id:'R-003', progId:'P-001', progName:'情報セキュリティ年次研修', userId:'sato',   userName:'佐藤 花子',     dept:'人事部',         date:'2026-03-05', score:72, passed:false },
+    { id:'R-004', progId:'P-002', progName:'フィッシング対策訓練',     userId:'admin',  userName:'システム管理者', dept:'情報システム部', date:'2026-01-15', score:100,passed:true },
+    { id:'R-005', progId:'P-003', progName:'AIの責任ある利用研修',     userId:'yamada', userName:'山田 太郎',     dept:'情報システム部', date:'2026-02-20', score:82, passed:true },
+  ];
+  eduProgCounter=6; eduRecCounter=6;
+  renderEducation();
+}
+
+function renderEducation(){
+  renderEduMetrics(); renderPrograms(); renderRecords(); renderTestList();
+  populateRecProgSel(); populateRecUserSel();
+}
+
+function renderEduMetrics(){
+  const el=document.getElementById('edu-metrics'); if(!el)return;
+  const users=loadUsers();
+  const completed=eduRecords.filter(r=>r.passed).length;
+  const totalReq=eduPrograms.length*users.length;
+  const rate=totalReq?Math.round(completed/totalReq*100):0;
+  const overdue=eduPrograms.filter(p=>p.nextDate!=='随時'&&new Date(p.nextDate)<new Date()).length;
+  el.innerHTML=`<div class="metric"><div class="mlb">研修プログラム数</div><div class="mv pur">${eduPrograms.length}</div></div>
+    <div class="metric"><div class="mlb">修了記録（合格のみ）</div><div class="mv grn">${completed}</div></div>
+    <div class="metric"><div class="mlb">全社修了率</div><div class="mv ${rate>=80?'grn':'amb'}">${rate}%</div></div>
+    <div class="metric"><div class="mlb">実施期限超過</div><div class="mv ${overdue?'red':'grn'}">${overdue}</div></div>`;
+}
+
+function renderPrograms(){
+  const tb=document.getElementById('prog-tbody'); if(!tb)return;
+  const users=loadUsers();
+  tb.innerHTML=eduPrograms.map(p=>{
+    const recs=eduRecords.filter(r=>r.progId===p.id&&r.passed);
+    const rate=users.length?Math.round(recs.length/users.length*100):0;
+    const overdue=p.nextDate!=='随時'&&new Date(p.nextDate)<new Date();
+    return `<tr>
+      <td style="color:#999;font-size:11px;">${p.id}</td>
+      <td style="font-weight:600;">${PROG_ICONS[p.cat]||'📚'} ${p.name}</td>
+      <td style="font-size:11px;">${p.target}</td>
+      <td><span class="tag">${p.cat}</span></td>
+      <td style="font-size:11px;color:var(--text2);">${p.freq}</td>
+      <td style="text-align:center;font-size:11px;">${p.duration}分</td>
+      <td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:60px;"><div style="height:100%;background:${rate>=80?'#1E8449':'#F57F17'};border-radius:3px;width:${rate}%;"></div></div><span style="font-size:11px;font-weight:700;color:${rate>=80?'#1E8449':'#F57F17'};">${rate}%</span></div></td>
+      <td style="font-size:11px;${overdue?'color:#C0392B;font-weight:700;':''}">${p.nextDate}${overdue?' ⚠':''}</td>
+      <td><button class="btn-ghost" onclick="openTestByProg('${p.id}')">テスト</button><button class="btn-ghost" onclick="genElearningByProg('${p.id}')">eL生成</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:#bbb;padding:24px;">プログラムなし</td></tr>';
+}
+
+function renderRecords(){
+  const tb=document.getElementById('rec-tbody'); if(!tb)return;
+  const filter=document.getElementById('rec-prog-filter')?.value||'';
+  const recs=filter?eduRecords.filter(r=>r.progId===filter):eduRecords;
+  tb.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<tr>
+    <td style="font-weight:600;">${r.userName}</td>
+    <td style="color:var(--text3);font-size:11px;">${r.dept}</td>
+    <td>${r.progName}</td>
+    <td style="font-size:11px;">${r.date}</td>
+    <td style="text-align:center;font-weight:700;color:${r.score>=80?'#1E8449':r.score>=60?'#F57F17':'#C0392B'}">${r.score}%</td>
+    <td style="text-align:center;">${r.passed?'<span class="badge b-approved">修了</span>':'<span class="badge b-high">未修了</span>'}</td>
+    <td style="text-align:center;">${r.passed?'<span class="cert-badge">🏆 修了証</span>':'-'}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#bbb;padding:20px;">記録なし</td></tr>';
+  renderCompletionMatrix();
+}
+
+function renderCompletionMatrix(){
+  const el=document.getElementById('completion-matrix'); if(!el)return;
+  const users=loadUsers(); const progs=eduPrograms.slice(0,6);
+  let h=`<table class="matrix-table"><thead><tr><th>ユーザー</th><th>部署</th>`;
+  progs.forEach(p=>h+=`<th style="max-width:120px;">${p.name}</th>`);
+  h+='</tr></thead><tbody>';
+  users.forEach(u=>{
+    h+=`<tr><td style="font-weight:600;white-space:nowrap;">${u.displayName||u.id}</td><td style="color:#999;font-size:11px;white-space:nowrap;">${u.dept||'—'}</td>`;
+    progs.forEach(p=>{
+      const rec=eduRecords.find(r=>r.progId===p.id&&r.userId===u.id);
+      if(rec&&rec.passed) h+=`<td class="matrix-ok">✓ ${rec.score}%</td>`;
+      else if(rec&&!rec.passed) h+=`<td class="matrix-ng">✕ ${rec.score}%</td>`;
+      else h+=`<td class="matrix-na">—</td>`;
+    });
+    h+='</tr>';
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function renderTestList(){
+  const el=document.getElementById('test-prog-list'); if(!el)return;
+  el.innerHTML=eduPrograms.map(p=>`
+    <div class="prog-card">
+      <div class="prog-header">
+        <div class="prog-icon" style="background:var(--accent-bg);">${PROG_ICONS[p.cat]||'📚'}</div>
+        <div style="flex:1;">
+          <div class="prog-title">${p.name}</div>
+          <div class="prog-meta">${p.cat}　対象：${p.target}　合格基準：${p.passScore}%以上</div>
+          <div class="prog-meta" style="margin-top:2px;">${p.desc}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openTestByProg('${p.id}')">テストを受ける →</button>
+      </div>
+    </div>`).join('');
+}
+
+function openProgModal(){
+  ['pm-name','pm-target','pm-dur','pm-next','pm-pass','pm-desc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=id==='pm-target'?'全従業員':id==='pm-dur'?'60':id==='pm-pass'?'80':'';});
+  document.getElementById('prog-modal').classList.add('open');
+}
+function saveProgram(){
+  const name=document.getElementById('pm-name').value.trim(); if(!name){showToast('研修名を入力してください');return;}
+  eduPrograms.unshift({id:'P-'+String(eduProgCounter++).padStart(3,'0'),name,cat:document.getElementById('pm-cat').value,target:document.getElementById('pm-target').value||'全従業員',freq:document.getElementById('pm-freq').value,duration:parseInt(document.getElementById('pm-dur').value)||60,nextDate:document.getElementById('pm-next').value||'—',passScore:parseInt(document.getElementById('pm-pass').value)||80,desc:document.getElementById('pm-desc').value||''});
+  populateRecProgSel(); renderEducation(); closeEduModal('prog-modal'); showToast(`「${name}」を追加しました`);
+}
+function openRecordModal(){ populateRecProgSel(); populateRecUserSel(); document.getElementById('rec-date').value=new Date().toISOString().split('T')[0]; document.getElementById('rec-score').value=''; document.getElementById('rec-note').value=''; document.getElementById('record-modal').classList.add('open'); }
+function saveRecord(){
+  const pSel=document.getElementById('rec-prog-sel'); const uSel=document.getElementById('rec-user-sel');
+  const progId=pSel.value; const userId=uSel.value;
+  if(!progId||!userId){showToast('研修と受講者を選択してください');return;}
+  const prog=eduPrograms.find(p=>p.id===progId); const user=loadUsers().find(u=>u.id===userId);
+  const score=parseInt(document.getElementById('rec-score').value)||0;
+  const passed=score>=((prog&&prog.passScore)||80);
+  eduRecords.unshift({id:'R-'+String(eduRecCounter++).padStart(3,'0'),progId,progName:prog?.name||'—',userId,userName:user?.displayName||userId,dept:user?.dept||'—',date:document.getElementById('rec-date').value,score,passed,note:document.getElementById('rec-note').value});
+  renderEducation(); closeEduModal('record-modal');
+  showToast(passed?`「${user?.displayName}」が修了しました 🏆`:`受講記録を追加しました（${score}% - 未修了）`);
+}
+function populateRecProgSel(){
+  ['rec-prog-sel','rec-prog-filter'].forEach(id=>{
+    const s=document.getElementById(id); if(!s)return;
+    s.innerHTML=(id==='rec-prog-filter'?'<option value="">すべての研修</option>':'<option value="">研修を選択</option>')+eduPrograms.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  });
+}
+function populateRecUserSel(){
+  const s=document.getElementById('rec-user-sel'); if(!s)return;
+  s.innerHTML='<option value="">受講者を選択</option>'+loadUsers().map(u=>`<option value="${u.id}">${u.displayName||u.id}（${u.dept||'—'}）</option>`).join('');
+}
+
+async function openTestByProg(progId){
+  const prog=eduPrograms.find(p=>p.id===progId); if(!prog)return;
+  currentTestProg=prog; testQuestions=[]; testAnswers={};
+  document.getElementById('test-modal-title').textContent=prog.name+' 理解度テスト';
+  document.getElementById('test-modal-sub').textContent=`合格基準：${prog.passScore}%以上　カテゴリ：${prog.cat}`;
+  document.getElementById('test-loading').style.display='block';
+  document.getElementById('test-questions').style.display='none';
+  document.getElementById('test-result').style.display='none';
+  document.getElementById('test-foot').style.display='none';
+  document.getElementById('test-modal').classList.add('open');
+  // Use larger token limit for test generation
+  const t=await callClaudeLong(`「${prog.name}」（${prog.desc}）に関する理解度確認テストを5問作成してください。各問題は4択（選択肢a〜d）で正解は1つです。必ずJSON配列のみで回答してください（説明文不要）：[{"q":"問題文","options":["a.選択肢","b.選択肢","c.選択肢","d.選択肢"],"answer":0,"explanation":"解説文"}]`);
+  try{
+    const clean=t.replace(/```json|```/g,'').trim();
+    testQuestions=JSON.parse(clean);
+    renderTestQuestions();
+  }catch(e){document.getElementById('test-loading').innerHTML='<div style="color:#C0392B;text-align:center;padding:20px;">テストの生成に失敗しました。もう一度お試しください。</div>';}
+}
+
+function renderTestQuestions(){
+  document.getElementById('test-loading').style.display='none';
+  document.getElementById('test-questions').style.display='block';
+  document.getElementById('test-foot').style.display='flex';
+  document.getElementById('test-submit-btn').style.display='inline-flex';
+  document.getElementById('test-questions').innerHTML=testQuestions.map((q,qi)=>`
+    <div class="test-q" id="testq-${qi}">
+      <div class="test-q-text">Q${qi+1}. ${q.q}</div>
+      ${q.options.map((opt,oi)=>`<div class="test-option" id="opt-${qi}-${oi}" onclick="selectAnswer(${qi},${oi})"><span style="font-weight:700;color:var(--accent);min-width:14px;">${['A','B','C','D'][oi]}</span>${opt.replace(/^[a-d]\./,'').trim()}</div>`).join('')}
+    </div>`).join('');
+  updateTestProgress();
+}
+function selectAnswer(qi,oi){
+  testAnswers[qi]=oi;
+  document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(el=>el.classList.remove('selected'));
+  document.getElementById(`opt-${qi}-${oi}`).classList.add('selected');
+  updateTestProgress();
+}
+function updateTestProgress(){ document.getElementById('test-progress').textContent=`${Object.keys(testAnswers).length} / ${testQuestions.length} 問回答済み`; }
+function submitTest(){
+  if(Object.keys(testAnswers).length<testQuestions.length){showToast('すべての問題に回答してください');return;}
+  let correct=0;
+  testQuestions.forEach((q,qi)=>{
+    const sel=testAnswers[qi]; const ans=q.answer; const ok=(sel===ans);
+    if(ok)correct++;
+    document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach((el,oi)=>{el.classList.remove('selected');if(oi===ans)el.classList.add('correct');else if(oi===sel&&!ok)el.classList.add('wrong');el.style.pointerEvents='none';});
+    document.getElementById('testq-'+qi).insertAdjacentHTML('beforeend',`<div style="margin-top:8px;font-size:11px;padding:8px 10px;border-radius:var(--r-sm);background:${ok?'#E8F5E9':'#FDECEA'};color:${ok?'#1B5E20':'#B71C1C'};">${ok?'✓ 正解':'✕ 不正解'}　解説：${q.explanation}</div>`);
+  });
+  const score=Math.round(correct/testQuestions.length*100);
+  const passed=score>=(currentTestProg?.passScore||80);
+  document.getElementById('test-result').style.display='block';
+  document.getElementById('test-result').innerHTML=`<div style="text-align:center;padding:20px;background:${passed?'#E8F5E9':'#FDECEA'};border-radius:var(--r-lg);margin-bottom:12px;"><div style="font-size:36px;margin-bottom:8px;">${passed?'🏆':'📝'}</div><div style="font-size:22px;font-weight:700;color:${passed?'#1E8449':'#C0392B'};">${score}点 / 100点</div><div style="font-size:14px;margin-top:4px;color:${passed?'#1E8449':'#C0392B'};">${passed?'合格 - 研修を修了しました':'不合格 - 再度学習してください'}</div><div style="font-size:12px;color:var(--text3);margin-top:6px;">${correct}問正解 / ${testQuestions.length}問中　合格基準：${currentTestProg?.passScore}%</div></div>`;
+  document.getElementById('test-submit-btn').style.display='none';
+  if(currentTestProg){
+    const u=currentUser;
+    eduRecords.unshift({id:'R-'+String(eduRecCounter++).padStart(3,'0'),progId:currentTestProg.id,progName:currentTestProg.name,userId:u.id,userName:u.displayName||u.id,dept:u.dept||'—',date:new Date().toISOString().split('T')[0],score,passed});
+    renderEducation();
+    showToast(passed?`修了しました 🏆（${score}点）`:`スコア ${score}点（合格基準 ${currentTestProg.passScore}%）`);
+  }
+}
+
+async function genElearning(){
+  const theme=document.getElementById('el-theme').value;
+  const audience=document.getElementById('el-audience').value;
+  const format=document.getElementById('el-format').value;
+  const duration=document.getElementById('el-duration').value;
+  const custom=document.getElementById('el-custom').value;
+  const el=document.getElementById('el-result');
+  el.style.display='block';
+  el.innerHTML=`<div class="el-section" style="text-align:center;padding:32px;"><div style="font-size:24px;margin-bottom:10px;">⏳</div><div style="font-size:13px;color:var(--text3);">eラーニングコンテンツを生成しています...</div></div>`;
+  const secCount=duration.includes('5分')?2:duration.includes('15分')?4:6;
+  const t=await callClaudeLong(`以下の条件でeラーニングコンテンツを作成してください。テーマ：${theme}、対象：${audience}、形式：${format}、所要時間：${duration}${custom?'、追加指示：'+custom:''}。必ずJSON形式のみで回答（説明文不要）：{"title":"研修タイトル","objective":"学習目標（1文）","sections":[{"title":"セクションタイトル","content":"本文300字程度","keypoints":["ポイント1","ポイント2","ポイント3"]}],"summary":"まとめ100字","quiz_hint":"理解度確認の観点1文"} セクションを${secCount}つ作成してください。`);
+  try{
+    const clean=t.replace(/```json|```/g,'').trim();
+    const d=JSON.parse(clean);
+    el.innerHTML=`
+      <div class="el-section" style="background:linear-gradient(135deg,var(--accent),#3C3489);color:#fff;border-color:transparent;">
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">${d.title}</div>
+        <div style="font-size:12px;opacity:0.85;">🎯 ${d.objective}</div>
+        <div style="font-size:11px;opacity:0.7;margin-top:4px;">対象：${audience}　形式：${format}　所要時間：${duration}</div>
+      </div>
+      ${(d.sections||[]).map((s,i)=>`<div class="el-section"><div class="el-section-title"><span class="el-section-num">${i+1}</span>${s.title}</div><div class="el-content">${s.content}</div>${s.keypoints?.length?`<div style="margin-top:10px;padding:10px 12px;background:var(--accent-bg);border-radius:var(--r-sm);"><div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;">📌 重要ポイント</div>${s.keypoints.map(k=>`<div style="font-size:12px;margin-bottom:3px;">・${k}</div>`).join('')}</div>`:''}</div>`).join('')}
+      <div class="el-section" style="background:var(--surface2);"><div class="el-section-title">📝 まとめ</div><div class="el-content">${d.summary}</div></div>
+      <div class="el-section" style="border-color:var(--accent);background:var(--accent-bg);">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px;">💡 理解度確認ポイント</div>
+        <div style="font-size:12px;color:var(--text2);">${d.quiz_hint}</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="saveElearningAsProgram('${d.title}')">この研修をプログラムに追加</button>
+      </div>`;
+  }catch(e){el.innerHTML=`<div class="el-section"><div class="ai-lbl">生成コンテンツ</div><div style="white-space:pre-wrap;font-size:13px;line-height:1.8;">${t}</div></div>`;}
+}
+
+async function genElearningByProg(progId){
+  const p=eduPrograms.find(x=>x.id===progId); if(!p)return;
+  showEduTab('elearning');
+  document.getElementById('el-custom').value=p.desc;
+  await genElearning();
+}
+
+function saveElearningAsProgram(title){
+  if(eduPrograms.find(p=>p.name===title)){showToast('既に同名のプログラムが存在します');return;}
+  eduPrograms.unshift({id:'P-'+String(eduProgCounter++).padStart(3,'0'),name:title,cat:'ISMS基礎',target:'全従業員',freq:'随時',duration:30,nextDate:'—',passScore:80,desc:'eラーニングから生成'});
+  renderEducation(); showToast(`「${title}」を研修プログラムに追加しました`);
+}
+
+function showEduTab(tab){
+  ['programs','records','test','elearning'].forEach(t=>{
+    const el=document.getElementById('edu-tab-'+t); if(el)el.style.display=t===tab?'block':'none';
+  });
+  // Update button appearance
+  document.querySelectorAll('#page-education .btn').forEach(b=>{
+    const txt=b.textContent.trim();
+    const map={'研修プログラム':'programs','受講記録':'records','理解度テスト':'test','eラーニング作成':'elearning'};
+    const matched=Object.entries(map).find(([k])=>txt.includes(k));
+    if(matched){ b.classList.toggle('btn-primary',matched[1]===tab); b.classList.toggle('btn',true); }
+  });
+  if(tab==='records')renderRecords();
+  if(tab==='programs')renderPrograms();
+}
+
+function closeEduModal(id){ document.getElementById(id).classList.remove('open'); }
+
+async function callClaudeLong(p){
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:'あなたはISMS・AIMS専門家です。指示された形式で正確に回答してください。',messages:[{role:'user',content:p}]})});const d=await r.json();return d.content?.[0]?.text||'エラー';}catch(e){return 'API接続エラー: '+e.message;}
+}
+
+// ============================================================
+// MANAGEMENT REVIEW ENGINE
+// ============================================================
+const MR_INPUT_ITEMS = [
+  { id:'prev_actions',  label:'前回レビューの指摘事項・改善措置の状況',         desc:'前回のマネジメントレビューで決定した改善措置の実施状況を評価します', std:'both' },
+  { id:'ext_issues',    label:'外部・内部の課題の変化',                         desc:'規制・法律・技術・組織・競合環境の変化を評価します', std:'both' },
+  { id:'interested',    label:'利害関係者のニーズと期待の変化',                 desc:'顧客・規制当局・パートナー等の要求事項の変化を評価します', std:'both' },
+  { id:'risk_status',   label:'情報セキュリティリスクアセスメントの結果',       desc:'リスクの状況・対応の進捗・残存リスクの受容可否を評価します', std:'isms' },
+  { id:'objectives',    label:'情報セキュリティ目標の達成状況',                 desc:'年度目標のKPI・達成率を評価します', std:'isms' },
+  { id:'incidents',     label:'インシデント・不適合の状況',                     desc:'発生したインシデント数・重大度・再発防止策の効果を評価します', std:'both' },
+  { id:'audit_results', label:'内部監査の結果',                                desc:'内部監査の指摘件数・是正状況・適合率を評価します', std:'both' },
+  { id:'monitoring',    label:'監視・測定・分析・評価の結果',                   desc:'KPI・メトリクス・モニタリング結果を評価します', std:'both' },
+  { id:'ai_risk',       label:'AIシステムのリスク・影響評価の状況（AIMS）',     desc:'AIシステムのリスク対応状況・影響評価の完了率を評価します', std:'aims' },
+  { id:'ai_objectives', label:'AIガバナンス目標の達成状況（AIMS）',             desc:'AI公平性・透明性・安全性に関する目標の達成状況を評価します', std:'aims' },
+  { id:'improvement',   label:'継続的改善の状況',                              desc:'改善提案・プロセス改善の実施状況を評価します', std:'both' },
+];
+
+let mgmtReviews = []; // [{id, year, sessions:[{id, date, chair, attendees, scopeStd, inputs:{}, outputs:[], overall, status}]}]
+let currentMRYear = null;
+let editingMRSession = null; // session being edited
+let mrOutputCounter = 1;
+let mrSessionCounter = 1;
+
+function initMR() {
+  // Sample data
+  mgmtReviews = [{
+    id: 'MR-2026', year: 2026,
+    sessions: [
+      {
+        id: 'MRS-001', date: '2026-03-15', chair: '代表取締役 山田 太郎',
+        attendees: 'CISO、情報システム部長、人事部長、営業部長',
+        scopeStd: 'both', status: 'complete',
+        inputs: {
+          prev_actions:  { eval:'good', note:'前回の是正措置11件中9件完了。残2件は継続対応中' },
+          ext_issues:    { eval:'warn', note:'改正個人情報保護法対応・AI規制動向に注視が必要' },
+          interested:    { eval:'good', note:'顧客からのセキュリティ要件に変化なし' },
+          risk_status:   { eval:'warn', note:'高リスク3件のうち2件対応完了。1件（不正アクセス）は継続対応' },
+          objectives:    { eval:'good', note:'セキュリティ研修受講率98%達成（目標90%）' },
+          incidents:     { eval:'good', note:'重大インシデント0件。軽微2件は是正完了' },
+          audit_results: { eval:'warn', note:'内部監査適合率92%。指摘3件の是正が必要' },
+          monitoring:    { eval:'good', note:'KPI全項目で目標値達成' },
+          ai_risk:       { eval:'warn', note:'採用AIの影響評価が未完了。対応要' },
+          ai_objectives: { eval:'none', note:'' },
+          improvement:   { eval:'good', note:'改善提案8件中7件実施完了' },
+        },
+        outputs: [
+          { id:'o1', type:'decision', content:'情報セキュリティ基本方針を2026年度版に改訂する', owner:'情報システム部', due:'2026-04-30', done:false },
+          { id:'o2', type:'improvement', content:'採用スクリーニングAIの影響評価を2026年Q2中に完了する', owner:'人事部', due:'2026-06-30', done:false },
+          { id:'o3', type:'resource', content:'EDR導入の追加ライセンス費用として予算50万円を承認する', owner:'情報システム部', due:'2026-04-15', done:true },
+        ],
+        overall: 'ISMSは概ね良好な運用状態を維持している。AI管理面では採用AIの影響評価完了が急務。次回レビューは2026年9月を予定。'
+      }
+    ]
+  }];
+  mrSessionCounter = 2;
+  mrOutputCounter = 4;
+  renderMRYearSel();
+  renderMRPage();
+}
+
+function renderMRYearSel() {
+  const sel = document.getElementById('mr-year-sel'); if(!sel)return;
+  if(!mgmtReviews.length){ sel.innerHTML='<option value="">年度なし</option>'; return; }
+  sel.innerHTML = mgmtReviews.sort((a,b)=>b.year-a.year).map(r=>`<option value="${r.id}">${r.year}年度</option>`).join('');
+  if(!currentMRYear) currentMRYear = mgmtReviews[0].id;
+  sel.value = currentMRYear;
+}
+
+function onMRYearChange() {
+  currentMRYear = document.getElementById('mr-year-sel').value;
+  renderMRPage();
+}
+
+function renderMRPage() {
+  const mr = mgmtReviews.find(x=>x.id===currentMRYear);
+  const empty = document.getElementById('mr-empty');
+  const overview = document.getElementById('mr-overview');
+  if(!mr){ empty.style.display='block'; overview.style.display='none'; return; }
+  empty.style.display='none'; overview.style.display='block';
+  document.getElementById('mr-year-title').textContent = `${mr.year}年度 マネジメントレビュー`;
+  const sessions = mr.sessions||[];
+  const complete = sessions.filter(s=>s.status==='complete').length;
+  const outputs = sessions.flatMap(s=>s.outputs||[]);
+  const outputDone = outputs.filter(o=>o.done).length;
+  document.getElementById('mr-metrics').innerHTML = `
+    <div class="metric"><div class="mlb">実施回数</div><div class="mv pur">${sessions.length}</div></div>
+    <div class="metric"><div class="mlb">完了済み</div><div class="mv grn">${complete}</div></div>
+    <div class="metric"><div class="mlb">決定事項総数</div><div class="mv blu">${outputs.length}</div></div>
+    <div class="metric"><div class="mlb">決定事項完了率</div><div class="mv grn">${outputs.length?Math.round(outputDone/outputs.length*100):0}%</div></div>`;
+  document.getElementById('mr-session-list').innerHTML = sessions.length
+    ? sessions.sort((a,b)=>b.date.localeCompare(a.date)).map(s=>renderMRSessionCard(s)).join('')
+    : '<div style="color:var(--text3);text-align:center;padding:24px;">レビュー会議が登録されていません</div>';
+}
+
+function renderMRSessionCard(s) {
+  const inputEvals = Object.values(s.inputs||{});
+  const warns = inputEvals.filter(x=>x.eval==='warn').length;
+  const bads  = inputEvals.filter(x=>x.eval==='bad').length;
+  const outputs = s.outputs||[];
+  const outDone = outputs.filter(o=>o.done).length;
+  const scopeLabel = {both:'ISMS+AIMS', isms:'ISMS', aims:'AIMS'}[s.scopeStd]||'—';
+  return `<div class="mr-session-card" onclick="openEditMRModal('${s.id}')">
+    <div class="mr-session-head">
+      <div>
+        <div class="mr-session-date">${s.date}　第${s.id.replace('MRS-','')}回マネジメントレビュー</div>
+        <div class="mr-session-meta">議長：${s.chair}　出席者：${s.attendees}　対象：${scopeLabel}</div>
+      </div>
+      <div class="mr-session-badges">
+        ${bads>0?`<span class="badge b-high">要改善 ${bads}件</span>`:''}
+        ${warns>0?`<span class="badge b-med">注意 ${warns}件</span>`:''}
+        ${outputs.length?`<span class="badge b-internal">決定事項 ${outDone}/${outputs.length}</span>`:''}
+        <span class="badge ${s.status==='complete'?'mr-status-complete':'mr-status-draft'}">${s.status==='complete'?'完了':'ドラフト'}</span>
+      </div>
+    </div>
+    ${s.overall?`<div style="margin-top:8px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);padding-top:8px;">${s.overall}</div>`:''}
+  </div>`;
+}
+
+// ---- Modal ----
+let mrCurrentInputs = {};
+let mrCurrentOutputs = [];
+
+function openNewMRModal() {
+  editingMRSession = null;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mr-date').value = today;
+  document.getElementById('mr-chair').value = '';
+  document.getElementById('mr-attendees').value = '';
+  document.getElementById('mr-scope-std').value = 'both';
+  document.getElementById('mr-overall').value = '';
+  mrCurrentInputs = {};
+  mrCurrentOutputs = [];
+  document.getElementById('mr-modal-title').textContent = '新規マネジメントレビュー会議';
+  document.getElementById('mr-modal-status').textContent = '';
+  renderMRInputItems(); renderMROutputItems();
+  document.getElementById('ai-mr-output').style.display='none';
+  document.getElementById('ai-mr-summary').style.display='none';
+  switchMRTab('input', document.querySelector('.mr-tab'));
+  document.getElementById('mr-modal').classList.add('open');
+}
+
+function openEditMRModal(sessionId) {
+  const mr = mgmtReviews.find(x=>x.id===currentMRYear);
+  const s = mr?.sessions.find(x=>x.id===sessionId);
+  if(!s)return;
+  editingMRSession = sessionId;
+  document.getElementById('mr-date').value = s.date;
+  document.getElementById('mr-chair').value = s.chair;
+  document.getElementById('mr-attendees').value = s.attendees;
+  document.getElementById('mr-scope-std').value = s.scopeStd||'both';
+  document.getElementById('mr-overall').value = s.overall||'';
+  mrCurrentInputs = JSON.parse(JSON.stringify(s.inputs||{}));
+  mrCurrentOutputs = JSON.parse(JSON.stringify(s.outputs||[]));
+  document.getElementById('mr-modal-title').textContent = `${s.date} マネジメントレビュー`;
+  document.getElementById('mr-modal-status').textContent = s.status==='complete'?'完了済み':'ドラフト';
+  renderMRInputItems(); renderMROutputItems();
+  document.getElementById('ai-mr-output').style.display='none';
+  document.getElementById('ai-mr-summary').style.display='none';
+  switchMRTab('input', document.querySelector('.mr-tab'));
+  document.getElementById('mr-modal').classList.add('open');
+}
+
+function closeMRModal() {
+  document.getElementById('mr-modal').classList.remove('open');
+  editingMRSession = null;
+}
+
+function switchMRTab(tab, el) {
+  document.querySelectorAll('.mr-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mr-tab-pane').forEach(p=>p.style.display='none');
+  el.classList.add('active');
+  document.getElementById('mr-tab-'+tab).style.display='block';
+  if(tab==='summary') renderMRSummary();
+}
+
+function renderMRInputItems() {
+  const std = document.getElementById('mr-scope-std').value;
+  const filtered = MR_INPUT_ITEMS.filter(i=>i.std==='both'||(std==='both')||(i.std===std));
+  document.getElementById('mr-input-items').innerHTML = filtered.map(item=>{
+    const cur = mrCurrentInputs[item.id]||{eval:'none',note:''};
+    return `<div class="mr-input-row">
+      <div class="mr-input-label">${item.label}</div>
+      <div class="mr-input-desc">${item.desc}</div>
+      <div class="mr-eval-btns">
+        <button class="mr-eval-btn good ${cur.eval==='good'?'active':''}" onclick="setMRInputEval('${item.id}','good')">✓ 問題なし</button>
+        <button class="mr-eval-btn warn ${cur.eval==='warn'?'active':''}" onclick="setMRInputEval('${item.id}','warn')">⚠ 要注意</button>
+        <button class="mr-eval-btn bad  ${cur.eval==='bad' ?'active':''}" onclick="setMRInputEval('${item.id}','bad')">✕ 要対応</button>
+      </div>
+      <textarea class="mr-note" placeholder="評価根拠・コメントを記入" onchange="setMRInputNote('${item.id}',this.value)">${cur.note||''}</textarea>
+    </div>`;
+  }).join('');
+}
+
+function setMRInputEval(id, val) {
+  if(!mrCurrentInputs[id]) mrCurrentInputs[id]={eval:'none',note:''};
+  mrCurrentInputs[id].eval = mrCurrentInputs[id].eval===val?'none':val;
+  renderMRInputItems();
+}
+function setMRInputNote(id, val) {
+  if(!mrCurrentInputs[id]) mrCurrentInputs[id]={eval:'none',note:''};
+  mrCurrentInputs[id].note = val;
+}
+
+function renderMROutputItems() {
+  const typeLabel = {decision:'決定事項', improvement:'改善指示', resource:'資源配分'};
+  const typeCls   = {decision:'mr-type-decision', improvement:'mr-type-improvement', resource:'mr-type-resource'};
+  document.getElementById('mr-output-items').innerHTML = mrCurrentOutputs.map(o=>`
+    <div class="mr-output-row">
+      <div class="mr-output-body">
+        <span class="mr-output-type ${typeCls[o.type]||'mr-type-decision'}">${typeLabel[o.type]||o.type}</span>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;">${o.content}</div>
+        <div style="font-size:11px;color:var(--text3);">担当：${o.owner||'—'}　期限：${o.due||'—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+        <button class="rs-btn done ${o.done?'active':''}" style="font-size:10px;padding:2px 8px;" onclick="toggleMROutputDone('${o.id}')">✓ 完了</button>
+        <button class="btn-reject" onclick="deleteMROutput('${o.id}')">削除</button>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text3);text-align:center;padding:16px;font-size:12px;">決定事項がまだ登録されていません</div>';
+}
+
+function addMROutput() {
+  const content = prompt('決定事項・改善指示の内容：'); if(!content)return;
+  const type = prompt('種別を入力（decision:決定事項 / improvement:改善指示 / resource:資源配分）：','improvement')||'improvement';
+  const owner = prompt('担当部署・担当者：')||'—';
+  const due = prompt('期限（例：2026-06-30）：')||'—';
+  mrCurrentOutputs.push({id:'o'+mrOutputCounter++, type, content, owner, due, done:false});
+  renderMROutputItems();
+}
+
+function toggleMROutputDone(id) {
+  const o = mrCurrentOutputs.find(x=>x.id===id); if(!o)return;
+  o.done=!o.done; renderMROutputItems();
+}
+function deleteMROutput(id) {
+  mrCurrentOutputs = mrCurrentOutputs.filter(x=>x.id!==id); renderMROutputItems();
+}
+
+function renderMRSummary() {
+  const warns = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='warn');
+  const bads  = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='bad');
+  const goods = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='good');
+  document.getElementById('mr-summary-content').innerHTML = `
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;">レビューサマリー</div>
+    <div class="g2" style="margin-bottom:14px;">
+      <div style="background:#E8F5E9;border-radius:var(--r-md);padding:12px;"><div style="font-size:11px;color:#1B5E20;font-weight:600;">問題なし</div><div style="font-size:22px;font-weight:700;color:#1E8449;">${goods.length}</div></div>
+      <div style="background:#FFF8E1;border-radius:var(--r-md);padding:12px;"><div style="font-size:11px;color:#F57F17;font-weight:600;">要注意</div><div style="font-size:22px;font-weight:700;color:#F57F17;">${warns.length}</div></div>
+    </div>
+    ${bads.length?`<div style="background:#FDECEA;border-radius:var(--r-md);padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:#B71C1C;font-weight:700;margin-bottom:6px;">要対応 ${bads.length}件</div>${bads.map(i=>`<div style="font-size:12px;margin-bottom:4px;">・${i.label}：${mrCurrentInputs[i.id]?.note||'—'}</div>`).join('')}</div>`:''}
+    ${warns.length?`<div style="background:#FFF8E1;border-radius:var(--r-md);padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:#F57F17;font-weight:700;margin-bottom:6px;">要注意 ${warns.length}件</div>${warns.map(i=>`<div style="font-size:12px;margin-bottom:4px;">・${i.label}：${mrCurrentInputs[i.id]?.note||'—'}</div>`).join('')}</div>`:''}
+    <div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;margin-bottom:6px;">決定事項・改善指示（${mrCurrentOutputs.length}件）</div>${mrCurrentOutputs.map(o=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">${{decision:'📋',improvement:'🔧',resource:'💰'}[o.type]||'•'} ${o.content}（${o.owner}・期限${o.due}）</div>`).join('')||'<div style="color:var(--text3);font-size:12px;">なし</div>'}</div>
+    ${document.getElementById('mr-overall').value?`<div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;"><div style="font-size:11px;font-weight:700;margin-bottom:4px;">総合評価</div><div style="font-size:12px;">${document.getElementById('mr-overall').value}</div></div>`:''}`;
+}
+
+function saveMRSession() {
+  const mr = mgmtReviews.find(x=>x.id===currentMRYear); if(!mr)return;
+  const date = document.getElementById('mr-date').value;
+  const chair = document.getElementById('mr-chair').value;
+  if(!date||!chair){ showToast('開催日と議長は必須です'); return; }
+  if(editingMRSession) {
+    const idx = mr.sessions.findIndex(s=>s.id===editingMRSession);
+    if(idx>=0) mr.sessions[idx] = { ...mr.sessions[idx], date, chair, attendees:document.getElementById('mr-attendees').value, scopeStd:document.getElementById('mr-scope-std').value, inputs:{...mrCurrentInputs}, outputs:[...mrCurrentOutputs], overall:document.getElementById('mr-overall').value, status:'complete' };
+  } else {
+    mr.sessions.push({ id:'MRS-'+String(mrSessionCounter++).padStart(3,'0'), date, chair, attendees:document.getElementById('mr-attendees').value, scopeStd:document.getElementById('mr-scope-std').value, inputs:{...mrCurrentInputs}, outputs:[...mrCurrentOutputs], overall:document.getElementById('mr-overall').value, status:'complete' });
+  }
+  closeMRModal(); renderMRPage(); showToast('マネジメントレビューを保存しました');
+}
+
+function openNewMRModal() {
+  // Check if a year exists, if not create one first
+  if(!mgmtReviews.length || !currentMRYear) {
+    const nowY = new Date().getFullYear();
+    const id = 'MR-'+nowY;
+    mgmtReviews.push({id, year:nowY, sessions:[]});
+    currentMRYear = id;
+    renderMRYearSel();
+    renderMRPage();
+  }
+  openNewMRSessionModal();
+}
+
+function openNewMRSessionModal() {
+  editingMRSession = null;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mr-date').value = today;
+  document.getElementById('mr-chair').value = '';
+  document.getElementById('mr-attendees').value = '';
+  document.getElementById('mr-scope-std').value = 'both';
+  document.getElementById('mr-overall').value = '';
+  mrCurrentInputs = {};
+  mrCurrentOutputs = [];
+  document.getElementById('mr-modal-title').textContent = '新規マネジメントレビュー会議';
+  document.getElementById('mr-modal-status').textContent = '';
+  renderMRInputItems(); renderMROutputItems();
+  document.getElementById('ai-mr-output').style.display='none';
+  document.getElementById('ai-mr-summary').style.display='none';
+  switchMRTab('input', document.querySelector('.mr-tab'));
+  document.getElementById('mr-modal').classList.add('open');
+}
+
+async function aiGenMROutput() {
+  const warns = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='warn'||mrCurrentInputs[i.id]?.eval==='bad');
+  const el = document.getElementById('ai-mr-output');
+  el.style.display='block'; setL('ai-mr-output');
+  const issues = warns.map(i=>`・${i.label}：${mrCurrentInputs[i.id]?.note||'評価済み'}`).join('\n');
+  const t = await callClaude(`マネジメントレビューの結果、以下の課題が確認されました：\n${issues||'特になし'}\nISO 27001 §9.3.3に基づくアウトプット（決定事項・改善指示・資源配分）の案を具体的に3〜5件提案してください。各項目に担当部署と推奨期限も含めてください。`);
+  setR('ai-mr-output', t);
+}
+
+async function aiGenMRSummary() {
+  renderMRSummary();
+  const el = document.getElementById('ai-mr-summary');
+  el.style.display='block'; setL('ai-mr-summary');
+  const goods = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='good').length;
+  const warns = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='warn').length;
+  const bads  = MR_INPUT_ITEMS.filter(i=>mrCurrentInputs[i.id]?.eval==='bad').length;
+  const t = await callClaude(`マネジメントレビュー結果：問題なし${goods}件・要注意${warns}件・要対応${bads}件。決定事項${mrCurrentOutputs.length}件。ISO 27001 §9.3に基づく議事録サマリー文章（200字程度）と次回レビューへの申し送り事項を生成してください。`);
+  setR('ai-mr-summary', t);
+}
+
+async function genMRReport() {
+  const mr = mgmtReviews.find(x=>x.id===currentMRYear); if(!mr)return;
+  const el = document.getElementById('ai-mr'); el.style.display='block'; setL('ai-mr');
+  const sessions = mr.sessions||[];
+  const allOutputs = sessions.flatMap(s=>s.outputs||[]);
+  const done = allOutputs.filter(o=>o.done).length;
+  const summary = sessions.map(s=>`${s.date}（議長：${s.chair}）：決定事項${(s.outputs||[]).length}件`).join('、');
+  const t = await callClaude(`${mr.year}年度マネジメントレビュー報告書の骨子を生成してください。実施回数：${sessions.length}回（${summary}）、決定事項合計：${allOutputs.length}件（完了${done}件）。ISO 27001 §9.3に基づく報告書構成（目的・実施状況・主要課題・決定事項・次年度方針）を提供してください。`);
+  setR('ai-mr', t);
+}
+let aiSystems = [];
+let aiRisks = [];
+let aiRiskCounter = 1;
+let aiSysCounter = 1;
+
+const RISK_LEVEL_CFG = {
+  low:          { label:'低リスク',   cls:'risk-pill-low' },
+  medium:       { label:'中リスク',   cls:'risk-pill-medium' },
+  high:         { label:'高リスク',   cls:'risk-pill-high' },
+  unacceptable: { label:'受入不可',   cls:'risk-pill-unacceptable' },
+};
+const PERSONAL_CFG = {
+  none:    { label:'なし',   cls:'personal-none' },
+  limited: { label:'限定的', cls:'personal-limited' },
+  yes:     { label:'あり',   cls:'personal-yes' },
+};
+
+// AIIA evaluation axes
+const AIIA_AXES = [
+  { id:'fairness',       label:'公平性',       desc:'バイアスや差別的出力がないか' },
+  { id:'transparency',   label:'透明性',       desc:'AIであることが利用者に明示されているか' },
+  { id:'explainability', label:'説明可能性',   desc:'判断根拠を説明できるか' },
+  { id:'safety',         label:'安全性',       desc:'有害なコンテンツや誤情報を生成しないか' },
+  { id:'privacy',        label:'プライバシー', desc:'個人データの適切な取り扱いがされているか' },
+  { id:'oversight',      label:'人間の監督',   desc:'人間が適切に監督・介入できるか' },
+];
+
+function initAIMS() {
+  aiSystems = [
+    { id:'AI-001', name:'Claude API（社内ツール）', cat:'自然言語処理（NLP）', role:'利用者（外部AIを利用）', provider:'Anthropic / Claude 3.5', dept:'情報システム部', owner:'山田 太郎', riskLevel:'medium', personalData:'limited', desc:'ISMS管理ポータルのAI分析機能に利用', assessed:false,
+      aiia:{ fairness:'none', transparency:'none', explainability:'none', safety:'none', privacy:'none', oversight:'none' } },
+    { id:'AI-002', name:'ChatGPT（業務補助）', cat:'自然言語処理（NLP）', role:'利用者（外部AIを利用）', provider:'OpenAI / GPT-4o', dept:'全部署', owner:'佐藤 花子', riskLevel:'medium', personalData:'none', desc:'文書作成・要約・翻訳の補助', assessed:false,
+      aiia:{ fairness:'none', transparency:'none', explainability:'none', safety:'none', privacy:'none', oversight:'none' } },
+    { id:'AI-003', name:'採用スクリーニングAI', cat:'意思決定支援', role:'利用者（外部AIを利用）', provider:'未定', dept:'人事部', owner:'田中 次郎', riskLevel:'high', personalData:'yes', desc:'求人応募者の書類選考を自動スコアリング（検討中）', assessed:false,
+      aiia:{ fairness:'none', transparency:'none', explainability:'none', safety:'none', privacy:'none', oversight:'none' } },
+  ];
+  aiRisks = [
+    { id:'AR-001', name:'生成AIによる誤情報・幻覚（ハルシネーション）', sysId:'AI-001', sysName:'Claude API（社内ツール）', cat:'幻覚・誤情報', principle:'安全性', impact:4, prob:3, action:'出力結果の人間によるレビュープロセスを導入', status:'open' },
+    { id:'AR-002', name:'採用AIによる特定属性への差別的スコアリング', sysId:'AI-003', sysName:'採用スクリーニングAI', cat:'バイアス・差別', principle:'公平性', impact:5, prob:4, action:'定期的なバイアス検査・多様性指標のモニタリング実施', status:'open' },
+    { id:'AR-003', name:'業務データのAI学習への意図しない利用', sysId:'AI-002', sysName:'ChatGPT（業務補助）', cat:'プライバシー侵害', principle:'プライバシー', impact:4, prob:3, action:'機密情報をAIに入力しないルールの周知・利用ガイドライン整備', status:'open' },
+  ];
+  aiRiskCounter = 4;
+  aiSysCounter = 4;
+  renderAIS();
+  renderAIIA();
+  renderAIRisk();
+}
+
+// ---- AI Systems ----
+function renderAIS() {
+  const tb = document.getElementById('ais-tbody');
+  if (!tb) return;
+  const isAdmin = currentUser?.role === 'admin';
+  tb.innerHTML = aiSystems.map(s => {
+    const rl = RISK_LEVEL_CFG[s.riskLevel] || RISK_LEVEL_CFG.low;
+    const pd = PERSONAL_CFG[s.personalData] || PERSONAL_CFG.none;
+    return `<tr>
+      <td style="color:#999;font-size:11px;">${s.id}</td>
+      <td style="font-weight:600;">${s.name}</td>
+      <td><span class="tag">${s.cat}</span></td>
+      <td style="font-size:11px;color:var(--text2);">${s.role.split('（')[0]}</td>
+      <td style="font-size:11px;color:var(--text3);">${s.provider}</td>
+      <td style="color:#888;">${s.dept}</td>
+      <td><span class="badge ${rl.cls}">${rl.label}</span></td>
+      <td><span class="badge ${pd.cls}">${pd.label}</span></td>
+      <td>${s.assessed ? '<span class="badge rs-done">完了</span>' : '<span class="badge rs-none">未実施</span>'}</td>
+      <td>
+        <button class="btn-ghost" onclick="showPage('ai-impact',document.querySelector('[data-page=ai-impact]'));setTimeout(()=>scrollToAIIA('${s.id}'),100)">影響評価</button>
+        <button class="btn-ghost" onclick="aiEvalSystem('${s.id}')">AI評価</button>
+        ${isAdmin ? `<button class="btn-reject" onclick="deleteAIS('${s.id}')">削除</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:#bbb;padding:24px;">登録なし</td></tr>';
+  updateAISMetrics();
+}
+
+function updateAISMetrics() {
+  document.getElementById('ais-total').textContent = aiSystems.length;
+  document.getElementById('ais-high').textContent = aiSystems.filter(s=>s.riskLevel==='high'||s.riskLevel==='unacceptable').length;
+  document.getElementById('ais-assessed').textContent = aiSystems.filter(s=>s.assessed).length;
+  document.getElementById('ais-action').textContent = aiSystems.filter(s=>s.riskLevel==='high'&&!s.assessed).length;
+}
+
+function submitAIS() {
+  const name = document.getElementById('ais-name').value.trim();
+  if (!name) { showToast('システム名を入力してください'); return; }
+  const sys = {
+    id: 'AI-' + String(aiSysCounter++).padStart(3,'0'),
+    name, cat: document.getElementById('ais-cat').value,
+    role: document.getElementById('ais-role').value,
+    provider: document.getElementById('ais-provider').value || '—',
+    dept: document.getElementById('ais-dept').value || '未設定',
+    owner: document.getElementById('ais-owner').value || '未設定',
+    riskLevel: document.getElementById('ais-risk').value,
+    personalData: document.getElementById('ais-personal').value,
+    desc: document.getElementById('ais-desc').value || '',
+    assessed: false,
+    aiia: { fairness:'none', transparency:'none', explainability:'none', safety:'none', privacy:'none', oversight:'none' }
+  };
+  aiSystems.unshift(sys);
+  toggleFP('ais-form');
+  renderAIS(); renderAIIA(); populateAirSysSel();
+  // AI評価
+  const box = document.getElementById('ai-ais');
+  box.style.display = 'block';
+  setL('ai-ais');
+  callClaude(`AIシステム「${sys.name}」（用途：${sys.desc}、リスクレベル：${RISK_LEVEL_CFG[sys.riskLevel].label}、個人データ：${PERSONAL_CFG[sys.personalData].label}）についてISO 42001の観点でガバナンス上の留意点と推奨する管理策を教えてください。`).then(t=>setR('ai-ais',t));
+  showToast(`「${name}」を登録しました`);
+}
+
+function deleteAIS(id) {
+  if(!confirm('このAIシステムを削除しますか？'))return;
+  aiSystems = aiSystems.filter(s=>s.id!==id);
+  aiRisks = aiRisks.filter(r=>r.sysId!==id);
+  renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
+}
+
+async function aiEvalSystem(id) {
+  const s = aiSystems.find(x=>x.id===id); if(!s)return;
+  const box = document.getElementById('ai-ais');
+  box.style.display='block'; setL('ai-ais');
+  const t = await callClaude(`AIシステム「${s.name}」（${s.cat}、${s.role}、リスク：${RISK_LEVEL_CFG[s.riskLevel].label}）のISO 42001観点での評価：公平性・透明性・説明可能性・安全性・プライバシー・人間の監督の各観点でリスクと推奨管理策を教えてください。`);
+  setR('ai-ais', t);
+}
+
+// ---- AIIA ----
+function renderAIIA() {
+  const el = document.getElementById('aiia-list'); if(!el)return;
+  if(!aiSystems.length){
+    el.innerHTML='<div style="text-align:center;padding:48px;color:var(--text3);"><div style="font-size:28px;margin-bottom:10px;">🔍</div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">AIシステムが未登録です</div><div style="font-size:12px;">AIシステム台帳でシステムを登録してください</div></div>';
+    return;
+  }
+  el.innerHTML = aiSystems.map(s => renderAIIACard(s)).join('');
+}
+
+function renderAIIACard(s) {
+  const rl = RISK_LEVEL_CFG[s.riskLevel]||RISK_LEVEL_CFG.low;
+  const scoreLabel = {none:'—', low:'問題なし', medium:'要注意', high:'要対応'};
+  const scoreCls = {none:'',low:'result-ok',medium:'result-na',high:'result-ng'};
+  const axesHTML = AIIA_AXES.map(ax => {
+    const cur = s.aiia[ax.id]||'none';
+    return `<div class="aiia-axis">
+      <div class="aiia-axis-label">
+        <span>${ax.label} <span style="font-weight:400;color:var(--text3);">— ${ax.desc}</span></span>
+        <span class="${scoreCls[cur]||''}">${scoreLabel[cur]||'—'}</span>
+      </div>
+      <div class="aiia-score-btns">
+        <button class="score-btn s1 ${cur==='low'?'active':''}" onclick="setAIIAScore('${s.id}','${ax.id}','low')">問題なし</button>
+        <button class="score-btn s2 ${cur==='medium'?'active':''}" onclick="setAIIAScore('${s.id}','${ax.id}','medium')">要注意</button>
+        <button class="score-btn s3 ${cur==='high'?'active':''}" onclick="setAIIAScore('${s.id}','${ax.id}','high')">要対応</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="aiia-card" id="aiia-${s.id}">
+    <div class="aiia-header">
+      <div>
+        <div class="aiia-sys-name">${s.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.cat}　${s.provider}　<span class="badge ${rl.cls}">${rl.label}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" onclick="aiGenAIIA('${s.id}')">Claude で評価を自動生成</button>
+        <button class="btn btn-green btn-sm" onclick="completeAIIA('${s.id}')">評価完了</button>
+      </div>
+    </div>
+    ${axesHTML}
+    <div class="ai-box" id="aiia-ai-${s.id}" style="display:none;margin-top:8px;"></div>
+  </div>`;
+}
+
+function setAIIAScore(sysId, axId, score) {
+  const s = aiSystems.find(x=>x.id===sysId); if(!s)return;
+  s.aiia[axId] = s.aiia[axId]===score ? 'none' : score;
+  renderAIIA();
+  setTimeout(()=>scrollToAIIA(sysId),20);
+}
+
+function scrollToAIIA(id) {
+  const el = document.getElementById('aiia-'+id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function completeAIIA(id) {
+  const s = aiSystems.find(x=>x.id===id); if(!s)return;
+  s.assessed = true;
+  showToast(`「${s.name}」の影響評価を完了しました`);
+  renderAIS(); renderAIIA();
+  setTimeout(()=>scrollToAIIA(id),20);
+}
+
+async function aiGenAIIA(id) {
+  const s = aiSystems.find(x=>x.id===id); if(!s)return;
+  const box = document.getElementById('aiia-ai-'+id);
+  box.style.display='block';
+  box.innerHTML='<div class="ai-lbl">Claude 評価中...</div><span style="color:#bbb;font-style:italic;">6つの観点で評価しています...</span>';
+  const t = await callClaude(`AIシステム「${s.name}」（${s.cat}、${s.desc||s.role}）について、ISO 42001の観点で公平性・透明性・説明可能性・安全性・プライバシー・人間の監督の6軸を「問題なし／要注意／要対応」で評価し、各軸の根拠と推奨対応を教えてください。`);
+  box.innerHTML=`<div class="ai-lbl">Claude AI影響評価結果</div><div style="white-space:pre-wrap;">${t}</div>`;
+}
+
+// ---- AI Risk ----
+function renderAIRisk() {
+  const tb = document.getElementById('air-tbody'); if(!tb)return;
+  tb.innerHTML = aiRisks.map(r => {
+    const lvl = r.impact+r.prob;
+    const badge = lvl>=8?'b-high':lvl>=5?'b-med':'b-low';
+    const lbl = lvl>=8?'高':lvl>=5?'中':'低';
+    const stCls = r.status==='done'?'air-status-done':r.status==='open'?'air-status-open':'air-status-none';
+    const stLbl = r.status==='done'?'対応済':'未対応';
+    return `<tr>
+      <td style="color:#999;font-size:11px;">${r.id}</td>
+      <td style="font-weight:600;max-width:160px;">${r.name}</td>
+      <td style="font-size:11px;color:var(--text3);">${r.sysName}</td>
+      <td><span class="tag">${r.cat}</span></td>
+      <td style="font-size:11px;color:var(--text2);">${r.principle}</td>
+      <td style="text-align:center;">${r.impact}</td>
+      <td style="text-align:center;">${r.prob}</td>
+      <td><span class="badge ${badge}">${lbl} (${lvl})</span></td>
+      <td style="font-size:11px;max-width:160px;color:var(--text2);">${r.action}</td>
+      <td>
+        <button class="badge ${stCls}" style="cursor:pointer;border:none;font-family:inherit;" onclick="toggleAIRiskStatus('${r.id}')">${stLbl}</button>
+      </td>
+      <td><button class="btn-ghost" onclick="analyzeAIRisk('${r.id}')">AI分析</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="11" style="text-align:center;color:#bbb;padding:24px;">登録なし</td></tr>';
+  updateAIRMetrics();
+}
+
+function updateAIRMetrics() {
+  document.getElementById('air-total').textContent = aiRisks.length;
+  document.getElementById('air-high').textContent = aiRisks.filter(r=>r.impact+r.prob>=8).length;
+  document.getElementById('air-done').textContent = aiRisks.filter(r=>r.status==='done').length;
+  document.getElementById('air-open').textContent = aiRisks.filter(r=>r.status==='open').length;
+}
+
+function toggleAIRiskStatus(id) {
+  const r = aiRisks.find(x=>x.id===id); if(!r)return;
+  r.status = r.status==='done'?'open':'done';
+  renderAIRisk();
+  showToast(r.status==='done'?'対応済みに設定しました':'未対応に戻しました');
+}
+
+function addAIRisk() {
+  const name = document.getElementById('air-name').value.trim(); if(!name)return;
+  const sel = document.getElementById('air-sys-sel');
+  const sysId = sel.value||null, sysName = sel.value?(aiSystems.find(s=>s.id===sel.value)?.name||'—'):'—';
+  const id = 'AR-'+String(aiRiskCounter++).padStart(3,'0');
+  aiRisks.push({id, name, sysId, sysName, cat:document.getElementById('air-cat').value, principle:document.getElementById('air-principle').value, impact:parseInt(document.getElementById('air-imp').value)||3, prob:parseInt(document.getElementById('air-prb').value)||3, action:document.getElementById('air-act').value||'対応策を検討', status:'open'});
+  toggleFP('air-form'); renderAIRisk(); showToast('AIリスクを追加しました');
+}
+
+async function analyzeAIRisk(id) {
+  const r = aiRisks.find(x=>x.id===id); if(!r)return;
+  const el = document.getElementById('ai-air-row');
+  el.style.display='block'; setL('ai-air-row');
+  const t = await callClaude(`AIリスク「${r.name}」（カテゴリ：${r.cat}、影響する原則：${r.principle}、影響度${r.impact}・可能性${r.prob}）の詳細分析と具体的な対応策をISO 42001の観点で教えてください。`);
+  el.innerHTML=`<div class="ai-lbl">Claude 分析結果</div><div>${t}</div>`;
+}
+
+async function assessAIRisk() {
+  const input = document.getElementById('air-input').value; if(!input.trim())return;
+  setL('ai-air');
+  const t = await callClaude(`以下のAIシステム・用途についてISO 42001の観点でリスク評価してください。公平性・透明性・説明可能性・安全性・プライバシー・人間の監督の観点でリスクを特定し、影響度（1-5）・可能性（1-5）と推奨対応策を示してください：\n${input}`);
+  document.getElementById('ai-air').style.display='block'; setR('ai-air',t);
+}
+
+function populateAirSysSel() {
+  const sel = document.getElementById('air-sys-sel'); if(!sel)return;
+  sel.innerHTML = '<option value="">（AIシステムを選択）</option>'+aiSystems.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+checkSession();
+</script>
+</body>
+</html>
