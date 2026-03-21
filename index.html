@@ -2193,7 +2193,7 @@ function renderEducation(){
 
 function renderEduMetrics(){
   const el=document.getElementById('edu-metrics'); if(!el)return;
-  const users=loadUsers();
+  const users=USERS;
   const completed=eduRecords.filter(r=>r.passed).length;
   const totalReq=eduPrograms.length*users.length;
   const rate=totalReq?Math.round(completed/totalReq*100):0;
@@ -2206,7 +2206,7 @@ function renderEduMetrics(){
 
 function renderPrograms(){
   const tb=document.getElementById('prog-tbody'); if(!tb)return;
-  const users=loadUsers();
+  const users=USERS;
   tb.innerHTML=eduPrograms.map(p=>{
     const recs=eduRecords.filter(r=>r.progId===p.id&&r.passed);
     const rate=users.length?Math.round(recs.length/users.length*100):0;
@@ -2243,7 +2243,7 @@ function renderRecords(){
 
 function renderCompletionMatrix(){
   const el=document.getElementById('completion-matrix'); if(!el)return;
-  const users=loadUsers(); const progs=eduPrograms.slice(0,6);
+  const users=USERS; const progs=eduPrograms.slice(0,6);
   let h=`<table class="matrix-table"><thead><tr><th>ユーザー</th><th>部署</th>`;
   progs.forEach(p=>h+=`<th style="max-width:120px;">${p.name}</th>`);
   h+='</tr></thead><tbody>';
@@ -2290,7 +2290,7 @@ function saveRecord(){
   const pSel=document.getElementById('rec-prog-sel'); const uSel=document.getElementById('rec-user-sel');
   const progId=pSel.value; const userId=uSel.value;
   if(!progId||!userId){showToast('研修と受講者を選択してください');return;}
-  const prog=eduPrograms.find(p=>p.id===progId); const user=loadUsers().find(u=>u.id===userId);
+  const prog=eduPrograms.find(p=>p.id===progId); const user=USERS.find(u=>u.id===userId);
   const score=parseInt(document.getElementById('rec-score').value)||0;
   const passed=score>=((prog&&prog.passScore)||80);
   eduRecords.unshift({id:'R-'+String(eduRecCounter++).padStart(3,'0'),progId,progName:prog?.name||'—',userId,userName:user?.displayName||userId,dept:user?.dept||'—',date:document.getElementById('rec-date').value,score,passed,note:document.getElementById('rec-note').value});
@@ -2305,7 +2305,7 @@ function populateRecProgSel(){
 }
 function populateRecUserSel(){
   const s=document.getElementById('rec-user-sel'); if(!s)return;
-  s.innerHTML='<option value="">受講者を選択</option>'+loadUsers().map(u=>`<option value="${u.id}">${u.displayName||u.id}（${u.dept||'—'}）</option>`).join('');
+  s.innerHTML='<option value="">受講者を選択</option>'+USERS.map(u=>`<option value="${u.id}">${u.displayName||u.id}（${u.dept||'—'}）</option>`).join('');
 }
 
 async function openTestByProg(progId){
