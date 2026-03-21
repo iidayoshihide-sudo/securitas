@@ -3059,22 +3059,41 @@ async function loadAppState() {
 // ============================================================
 // 招待・パスワードリセット処理
 // ============================================================
+
+// onAuthStateChange で PASSWORD_RECOVERY / SIGNED_IN(invite) を確実にキャッチ
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY' ||
+      (event === 'SIGNED_IN' && window._pendingPasswordSet)) {
+    window._pendingPasswordSet = false;
+    history.replaceState(null, '', window.location.pathname);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('set-password-screen').style.display = 'flex';
+  }
+});
+
 async function checkInviteToken() {
   const hash = window.location.hash;
-  const isInvite   = hash.includes('type=invite');
-  const isRecovery = hash.includes('type=recovery');
-
-  if (isInvite || isRecovery) {
-    // Supabase JS がトークンを自動処理 → セッションが生成される
+  if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+    window._pendingPasswordSet = true;
+    // Supabase JS がトークンを非同期処理するため少し待つ
+    await new Promise(r => setTimeout(r, 800));
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      // ハッシュを消してブラウザ履歴をクリーン
+      window._pendingPasswordSet = false;
       history.replaceState(null, '', window.location.pathname);
       document.getElementById('login-screen').style.display = 'none';
-      const sp = document.getElementById('set-password-screen');
-      sp.style.display = 'flex';
+      document.getElementById('set-password-screen').style.display = 'flex';
       return;
     }
+    // onAuthStateChange に委ねる（タイムアウト後はログイン画面）
+    setTimeout(() => {
+      if (window._pendingPasswordSet) {
+        window._pendingPasswordSet = false;
+        checkSession();
+      }
+    }, 3000);
+    return;
   }
   await checkSession();
 }
@@ -3088,7 +3107,6 @@ async function setInvitePassword() {
   err.textContent = '設定中...';
   const { error } = await supabase.auth.updateUser({ password: pw });
   if (error) { err.textContent = 'エラー: ' + error.message; return; }
-  // プロファイル取得 → アプリ起動
   const { data: { session } } = await supabase.auth.getSession();
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
   currentUser = {
