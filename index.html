@@ -340,6 +340,11 @@ window.onerror = function(msg, src, line) {
   }
   d.textContent = 'JSエラー: ' + msg + ' (行' + line + ')';
 };
+window.addEventListener('unhandledrejection', function(e) {
+  var d = document.getElementById('js-error-banner');
+  if (!d) { d = document.createElement('div'); d.id = 'js-error-banner'; d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:#fff;padding:10px 16px;font-size:12px;font-family:monospace;z-index:99999;word-break:break-all;'; document.body.prepend(d); }
+  d.textContent = 'Promise例外: ' + (e.reason?.message || e.reason || '不明');
+});
 
 // Supabase設定 (GitHub ActionsでCI/CDが注入)
 const SUPABASE_URL = '%%SUPABASE_URL%%';
@@ -419,9 +424,7 @@ _sb.auth.onAuthStateChange((event, session) => {
     </div>
     <button class="login-btn" onclick="doLogin()">ログイン</button>
     <div class="login-err" id="l-err"></div>
-    <div class="login-hint">
-      初期アカウント：<strong>admin</strong> / <strong>admin123</strong>
-    </div>
+    <div id="login-diag" style="font-size:10px;color:#aaa;text-align:center;margin-top:8px;"></div>
   </div>
 </div>
 
@@ -3179,6 +3182,19 @@ async function setInvitePassword() {
     if (btn) { btn.disabled = false; btn.textContent = 'パスワードを設定してログイン'; }
   }
 }
+
+// 起動時診断
+(function() {
+  var diag = document.getElementById('login-diag');
+  if (!diag) return;
+  var sdkOk  = typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function';
+  var clientOk = typeof supabase !== 'undefined' && supabase !== null && typeof supabase.auth !== 'undefined';
+  diag.innerHTML =
+    (sdkOk   ? '✅' : '❌') + ' SDK  ' +
+    (clientOk ? '✅' : '❌') + ' Client  ' +
+    'v' + (window.supabase?.version || '?');
+  diag.style.color = (sdkOk && clientOk) ? '#27ae60' : '#c0392b';
+})();
 
 checkInviteToken();
 </script>
