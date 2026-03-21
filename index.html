@@ -3122,19 +3122,27 @@ async function setInvitePassword() {
   if (!pw || pw.length < 8) { err.textContent = '8文字以上のパスワードを入力してください'; return; }
   if (pw !== pw2)            { err.textContent = 'パスワードが一致しません'; return; }
   err.textContent = '設定中...';
-  const { error } = await supabase.auth.updateUser({ password: pw });
-  if (error) { err.textContent = 'エラー: ' + error.message; return; }
-  const { data: { session } } = await supabase.auth.getSession();
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-  currentUser = {
-    id: session.user.email,
-    supabaseId: session.user.id,
-    displayName: profile?.display_name || session.user.email.split('@')[0],
-    dept: profile?.dept || '未設定',
-    role: profile?.role || 'user',
-  };
+
+  const { data, error } = await supabase.auth.updateUser({ password: pw });
+  if (error) {
+    err.textContent = 'エラー: ' + error.message;
+    return;
+  }
+
+  // パスワード設定成功 → サインアウトしてログイン画面へ
+  await supabase.auth.signOut();
+  window._pendingPasswordReset = false;
+
   document.getElementById('set-password-screen').style.display = 'none';
-  bootApp();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-id').value = data?.user?.email || '';
+  document.getElementById('l-err').textContent = '';
+
+  // 成功メッセージをログインフォームに表示
+  const hint = document.querySelector('.login-hint');
+  if (hint) {
+    hint.innerHTML = '<strong style="color:#1E8449;">✓ パスワードを設定しました。新しいパスワードでログインしてください。</strong>';
+  }
 }
 
 checkInviteToken();
