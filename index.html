@@ -3119,29 +3119,47 @@ async function setInvitePassword() {
   const pw  = document.getElementById('sp-pw').value;
   const pw2 = document.getElementById('sp-pw2').value;
   const err = document.getElementById('sp-err');
-  if (!pw || pw.length < 8) { err.textContent = '8文字以上のパスワードを入力してください'; return; }
-  if (pw !== pw2)            { err.textContent = 'パスワードが一致しません'; return; }
-  err.textContent = '設定中...';
+  const btn = document.querySelector('#set-password-screen .login-btn');
 
-  const { data, error } = await supabase.auth.updateUser({ password: pw });
-  if (error) {
-    err.textContent = 'エラー: ' + error.message;
-    return;
-  }
+  try {
+    if (!pw || pw.length < 8) { err.textContent = '8文字以上のパスワードを入力してください'; return; }
+    if (pw !== pw2)            { err.textContent = 'パスワードが一致しません'; return; }
 
-  // パスワード設定成功 → サインアウトしてログイン画面へ
-  await supabase.auth.signOut();
-  window._pendingPasswordReset = false;
+    err.textContent = '設定中...';
+    if (btn) { btn.disabled = true; btn.textContent = '設定中...'; }
 
-  document.getElementById('set-password-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('l-id').value = data?.user?.email || '';
-  document.getElementById('l-err').textContent = '';
+    // セッション確認
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession) {
+      err.textContent = 'セッションが切れています。リンクを再度クリックしてください。';
+      if (btn) { btn.disabled = false; btn.textContent = 'パスワードを設定してログイン'; }
+      return;
+    }
 
-  // 成功メッセージをログインフォームに表示
-  const hint = document.querySelector('.login-hint');
-  if (hint) {
-    hint.innerHTML = '<strong style="color:#1E8449;">✓ パスワードを設定しました。新しいパスワードでログインしてください。</strong>';
+    const { data, error } = await supabase.auth.updateUser({ password: pw });
+    if (error) {
+      err.textContent = 'エラー: ' + error.message;
+      if (btn) { btn.disabled = false; btn.textContent = 'パスワードを設定してログイン'; }
+      return;
+    }
+
+    // 成功 → サインアウトしてログイン画面へ
+    await supabase.auth.signOut();
+    window._pendingPasswordReset = false;
+
+    document.getElementById('set-password-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('l-id').value = data?.user?.email || '';
+    document.getElementById('l-err').textContent = '';
+
+    const hint = document.querySelector('.login-hint');
+    if (hint) {
+      hint.innerHTML = '<strong style="color:#1E8449;">✓ パスワードを設定しました。ログインしてください。</strong>';
+    }
+
+  } catch(e) {
+    err.textContent = '予期しないエラー: ' + e.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'パスワードを設定してログイン'; }
   }
 }
 
