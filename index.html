@@ -333,6 +333,23 @@ textarea { resize:vertical; min-height:64px; }
 const SUPABASE_URL = '%%SUPABASE_URL%%';
 const SUPABASE_ANON_KEY = '%%SUPABASE_ANON_KEY%%';
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// クライアント生成直後にリスナーを登録（DOMより前に実行）
+window._pendingPasswordReset = false;
+_sb.auth.onAuthStateChange((event, session) => {
+  window._lastAuthEvent  = event;
+  window._lastAuthSession = session;
+  if (event === 'PASSWORD_RECOVERY') {
+    window._pendingPasswordReset = true;
+    // DOM が既に準備済みなら即表示
+    const sp = document.getElementById('set-password-screen');
+    if (sp) {
+      document.getElementById('login-screen').style.display = 'none';
+      sp.style.display = 'flex';
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+});
 </script>
 </head>
 <body>
@@ -3059,42 +3076,42 @@ async function loadAppState() {
 // ============================================================
 // 招待・パスワードリセット処理
 // ============================================================
-
-// onAuthStateChange で PASSWORD_RECOVERY / SIGNED_IN(invite) を確実にキャッチ
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'PASSWORD_RECOVERY' ||
-      (event === 'SIGNED_IN' && window._pendingPasswordSet)) {
-    window._pendingPasswordSet = false;
+async function checkInviteToken() {
+  // HEAD スクリプトで PASSWORD_RECOVERY が検知済みの場合
+  if (window._pendingPasswordReset) {
     history.replaceState(null, '', window.location.pathname);
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'none';
     document.getElementById('set-password-screen').style.display = 'flex';
-  }
-});
-
-async function checkInviteToken() {
-  const hash = window.location.hash;
-  if (hash.includes('type=invite') || hash.includes('type=recovery')) {
-    window._pendingPasswordSet = true;
-    // Supabase JS がトークンを非同期処理するため少し待つ
-    await new Promise(r => setTimeout(r, 800));
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      window._pendingPasswordSet = false;
-      history.replaceState(null, '', window.location.pathname);
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('set-password-screen').style.display = 'flex';
-      return;
-    }
-    // onAuthStateChange に委ねる（タイムアウト後はログイン画面）
-    setTimeout(() => {
-      if (window._pendingPasswordSet) {
-        window._pendingPasswordSet = false;
-        checkSession();
-      }
-    }, 3000);
     return;
   }
+
+  // URL に認証トークンが含まれているか確認（hash 旧形式 / code= PKCE 新形式）
+  const hash   = window.location.hash;
+  const search = window.location.search;
+  const hasToken = hash.includes('access_token') || hash.includes('type=invite') ||
+                   hash.includes('type=recovery') || search.includes('code=');
+
+  if (hasToken) {
+    // Supabase が code を交換するまで最大 4 秒ポーリング
+    for (let i = 0; i < 8; i++) {
+      await new Promise(r => setTimeout(r, 500));
+      if (window._pendingPasswordReset ||
+          window._lastAuthEvent === 'PASSWORD_RECOVERY') {
+        history.replaceState(null, '', window.location.pathname);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('set-password-screen').style.display = 'flex';
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        history.replaceState(null, '', window.location.pathname);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('set-password-screen').style.display = 'flex';
+        return;
+      }
+    }
+  }
+
   await checkSession();
 }
 
