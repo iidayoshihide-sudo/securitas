@@ -329,6 +329,18 @@ textarea { resize:vertical; min-height:64px; }
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// エラーを画面に表示（デバッグ用）
+window.onerror = function(msg, src, line) {
+  var d = document.getElementById('js-error-banner');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = 'js-error-banner';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:#fff;padding:10px 16px;font-size:12px;font-family:monospace;z-index:99999;word-break:break-all;';
+    document.body && document.body.prepend ? document.body.prepend(d) : setTimeout(function(){ document.body.prepend(d); }, 100);
+  }
+  d.textContent = 'JSエラー: ' + msg + ' (行' + line + ')';
+};
+
 // Supabase設定 (GitHub ActionsでCI/CDが注入)
 const SUPABASE_URL = '%%SUPABASE_URL%%';
 const SUPABASE_ANON_KEY = '%%SUPABASE_ANON_KEY%%';
@@ -1234,23 +1246,28 @@ const supabase = _sb;
 let currentUser = null;
 
 async function doLogin() {
-  const email = document.getElementById('l-id').value.trim();
-  const pw = document.getElementById('l-pw').value;
-  const err = document.getElementById('l-err');
-  if (!email || !pw) { err.textContent = 'メールアドレスとパスワードを入力してください'; return; }
-  err.textContent = 'ログイン中...';
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
-  if (error) { err.textContent = 'メールアドレスまたはパスワードが正しくありません'; return; }
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-  currentUser = {
-    id: data.user.email,
-    supabaseId: data.user.id,
-    displayName: profile?.display_name || data.user.email.split('@')[0],
-    dept: profile?.dept || '未設定',
-    role: profile?.role || 'user',
-  };
-  err.textContent = '';
-  bootApp();
+  const errEl = document.getElementById('l-err');
+  try {
+    const email = document.getElementById('l-id').value.trim();
+    const pw = document.getElementById('l-pw').value;
+    if (!email || !pw) { errEl.textContent = 'メールアドレスとパスワードを入力してください'; return; }
+    errEl.textContent = 'ログイン中...';
+    errEl.style.color = '#555';
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+    if (error) { errEl.textContent = 'エラー: ' + error.message; errEl.style.color = '#c0392b'; return; }
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+    currentUser = {
+      id: data.user.email,
+      supabaseId: data.user.id,
+      displayName: profile?.display_name || data.user.email.split('@')[0],
+      dept: profile?.dept || '未設定',
+      role: profile?.role || 'user',
+    };
+    errEl.textContent = '';
+    bootApp();
+  } catch(e) {
+    if (errEl) { errEl.textContent = 'JS例外: ' + e.message; errEl.style.color = '#c0392b'; }
+  }
 }
 
 document.addEventListener('keydown', e => {
