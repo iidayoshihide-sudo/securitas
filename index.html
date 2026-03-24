@@ -1343,16 +1343,58 @@ function renderUsers() {
   const list = document.getElementById('user-list');
   if (!list) return;
   list.innerHTML = USERS.map(u => `
-    <div class="user-row">
+    <div class="user-row" id="urow-${u.id}">
       <div class="ua">${(u.displayName||'U').charAt(0).toUpperCase()}</div>
       <div class="u-info">
         <div class="u-name-lg">${u.displayName} <span style="font-size:11px;color:var(--text3);">(${u.dept})</span></div>
         <div class="u-meta"><span class="badge ${u.role==='admin'?'b-admin':'b-user'}">${u.role==='admin'?'管理者':'一般ユーザー'}</span></div>
       </div>
-      ${u.id !== currentUser.supabaseId && currentUser.role === 'admin' ? `
-        <button class="btn btn-sm" onclick="toggleUserRole('${u.id}','${u.role}')">${u.role==='admin'?'一般に変更':'管理者に昇格'}</button>
-      ` : u.id === currentUser.supabaseId ? `<span style="font-size:11px;color:var(--text3);">（自分）</span>` : ''}
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${currentUser.role === 'admin' ? `<button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="editUser('${u.id}')">編集</button>` : ''}
+        ${u.id !== currentUser.supabaseId && currentUser.role === 'admin' ? `
+          <button class="btn btn-sm" onclick="toggleUserRole('${u.id}','${u.role}')">${u.role==='admin'?'一般に変更':'管理者に昇格'}</button>
+        ` : u.id === currentUser.supabaseId ? `<span style="font-size:11px;color:var(--text3);">（自分）</span>` : ''}
+      </div>
+    </div>
+    <div id="uedit-${u.id}" style="display:none;padding:10px 16px 14px 56px;background:var(--surface2);border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">表示名</div>
+          <input id="uname-${u.id}" type="text" value="${u.displayName}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部署</div>
+          <input id="udept-${u.id}" type="text" value="${u.dept === '—' ? '' : u.dept}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+        </div>
+        <button class="btn btn-sm" onclick="saveUser('${u.id}')">保存</button>
+        <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="cancelEditUser('${u.id}')">キャンセル</button>
+      </div>
     </div>`).join('') || '<div style="color:var(--text3);padding:16px;">ユーザーなし</div>';
+}
+
+function editUser(uid) {
+  document.getElementById('uedit-' + uid).style.display = 'block';
+  document.getElementById('urow-' + uid).style.background = 'var(--accent-bg)';
+}
+
+function cancelEditUser(uid) {
+  document.getElementById('uedit-' + uid).style.display = 'none';
+  document.getElementById('urow-' + uid).style.background = '';
+}
+
+async function saveUser(uid) {
+  const name = document.getElementById('uname-' + uid).value.trim();
+  const dept = document.getElementById('udept-' + uid).value.trim();
+  if (!name) { showToast('表示名を入力してください'); return; }
+  const { error } = await supabase.from('profiles').update({
+    display_name: name,
+    dept: dept || null,
+  }).eq('id', uid);
+  if (error) { showToast('保存に失敗しました: ' + error.message); return; }
+  const u = USERS.find(x => x.id === uid);
+  if (u) { u.displayName = name; u.dept = dept || '—'; }
+  renderUsers();
+  showToast('ユーザー情報を更新しました');
 }
 
 function addUser() {
