@@ -2069,6 +2069,7 @@ function setCheckResult(yearId, dId, itemId, result) {
   if (!item) return;
   item.result = item.result===result ? 'none' : result;
   renderAuditPage();
+  queueSave();
   // Re-open drawer
   setTimeout(()=>{ const b=document.getElementById('dbody-'+dId); if(b)b.classList.add('open'); },10);
 }
@@ -2077,13 +2078,13 @@ function setCheckNote(yearId, dId, itemId, note) {
   const yd = auditYears.find(a=>a.id===yearId);
   const d = yd?.depts.find(x=>x.id===dId);
   const item = d?.items.find(x=>x.id===itemId);
-  if (item) item.note = note;
+  if (item) { item.note = note; queueSave(); }
 }
 
 function removeDept(dId) {
   if (!confirm('この部署の監査記録を削除しますか？')) return;
   const yd = auditYears.find(a=>a.id===currentAuditYear);
-  if (yd) { yd.depts = yd.depts.filter(d=>d.id!==dId); renderAuditPage(); }
+  if (yd) { yd.depts = yd.depts.filter(d=>d.id!==dId); renderAuditPage(); queueSave(); }
 }
 
 // ----- New Year Modal -----
@@ -2108,6 +2109,7 @@ function createAuditYear() {
   closeAuditModal('new-audit-modal');
   renderAuditPage();
   showToast(`${year}年度の内部監査を作成しました`);
+  queueSave();
   openAddDeptModal();
 }
 
@@ -2174,6 +2176,7 @@ function saveDeptAudit() {
   closeAuditModal('add-dept-modal');
   renderAuditPage();
   showToast(`「${name}」の監査チェックリストを追加しました`);
+  queueSave();
 }
 
 // ----- Dept Detail Modal -----
@@ -2216,13 +2219,14 @@ function setDetailResult(dId, itemId, result) {
   item.result = item.result===result ? 'none' : result;
   renderDeptDetailTable(d);
   renderAuditPage();
+  queueSave();
 }
 
 function setDetailNote(dId, itemId, note) {
   const yd = auditYears.find(a=>a.id===currentAuditYear);
   const d = yd?.depts.find(x=>x.id===dId);
   const item = d?.items.find(x=>x.id===itemId);
-  if (item) item.note = note;
+  if (item) { item.note = note; queueSave(); }
 }
 
 async function aiAuditDept() {
@@ -2411,7 +2415,7 @@ function openProgModal(){
 function saveProgram(){
   const name=document.getElementById('pm-name').value.trim(); if(!name){showToast('研修名を入力してください');return;}
   eduPrograms.unshift({id:'P-'+String(eduProgCounter++).padStart(3,'0'),name,cat:document.getElementById('pm-cat').value,target:document.getElementById('pm-target').value||'全従業員',freq:document.getElementById('pm-freq').value,duration:parseInt(document.getElementById('pm-dur').value)||60,nextDate:document.getElementById('pm-next').value||'—',passScore:parseInt(document.getElementById('pm-pass').value)||80,desc:document.getElementById('pm-desc').value||''});
-  populateRecProgSel(); renderEducation(); closeEduModal('prog-modal'); showToast(`「${name}」を追加しました`);
+  populateRecProgSel(); renderEducation(); closeEduModal('prog-modal'); showToast(`「${name}」を追加しました`); queueSave();
 }
 function openRecordModal(){ populateRecProgSel(); populateRecUserSel(); document.getElementById('rec-date').value=new Date().toISOString().split('T')[0]; document.getElementById('rec-score').value=''; document.getElementById('rec-note').value=''; document.getElementById('record-modal').classList.add('open'); }
 function saveRecord(){
@@ -2422,7 +2426,7 @@ function saveRecord(){
   const score=parseInt(document.getElementById('rec-score').value)||0;
   const passed=score>=((prog&&prog.passScore)||80);
   eduRecords.unshift({id:'R-'+String(eduRecCounter++).padStart(3,'0'),progId,progName:prog?.name||'—',userId,userName:user?.displayName||userId,dept:user?.dept||'—',date:document.getElementById('rec-date').value,score,passed,note:document.getElementById('rec-note').value});
-  renderEducation(); closeEduModal('record-modal');
+  renderEducation(); closeEduModal('record-modal'); queueSave();
   showToast(passed?`「${user?.displayName}」が修了しました 🏆`:`受講記録を追加しました（${score}% - 未修了）`);
 }
 function populateRecProgSel(){
@@ -2491,7 +2495,7 @@ function submitTest(){
   if(currentTestProg){
     const u=currentUser;
     eduRecords.unshift({id:'R-'+String(eduRecCounter++).padStart(3,'0'),progId:currentTestProg.id,progName:currentTestProg.name,userId:u.id,userName:u.displayName||u.id,dept:u.dept||'—',date:new Date().toISOString().split('T')[0],score,passed});
-    renderEducation();
+    renderEducation(); queueSave();
     showToast(passed?`修了しました 🏆（${score}点）`:`スコア ${score}点（合格基準 ${currentTestProg.passScore}%）`);
   }
 }
@@ -2536,7 +2540,7 @@ async function genElearningByProg(progId){
 function saveElearningAsProgram(title){
   if(eduPrograms.find(p=>p.name===title)){showToast('既に同名のプログラムが存在します');return;}
   eduPrograms.unshift({id:'P-'+String(eduProgCounter++).padStart(3,'0'),name:title,cat:'ISMS基礎',target:'全従業員',freq:'随時',duration:30,nextDate:'—',passScore:80,desc:'eラーニングから生成'});
-  renderEducation(); showToast(`「${title}」を研修プログラムに追加しました`);
+  renderEducation(); showToast(`「${title}」を研修プログラムに追加しました`); queueSave();
 }
 
 function showEduTab(tab){
@@ -2828,7 +2832,7 @@ function saveMRSession() {
   } else {
     mr.sessions.push({ id:'MRS-'+String(mrSessionCounter++).padStart(3,'0'), date, chair, attendees:document.getElementById('mr-attendees').value, scopeStd:document.getElementById('mr-scope-std').value, inputs:{...mrCurrentInputs}, outputs:[...mrCurrentOutputs], overall:document.getElementById('mr-overall').value, status:'complete' });
   }
-  closeMRModal(); renderMRPage(); showToast('マネジメントレビューを保存しました');
+  closeMRModal(); renderMRPage(); showToast('マネジメントレビューを保存しました'); queueSave();
 }
 
 function openNewMRModal() {
@@ -3176,6 +3180,8 @@ async function saveAppState() {
     const state = {
       assets, risks, riskCounter, responseCounter,
       aiSystems, aiRisks, aiRiskCounter, aiSysCounter,
+      auditYears, mrYears: mgmtReviews, mrSessionCounter, mrOutputCounter,
+      eduPrograms, eduRecords, eduProgCounter, eduRecCounter,
     };
     await supabase.from('org_data').upsert({
       key: 'app_state',
@@ -3195,6 +3201,10 @@ async function loadAppState() {
     if (s.risks?.length)     { risks = s.risks; riskCounter = s.riskCounter || 6; responseCounter = s.responseCounter || 200; }
     if (s.aiSystems?.length) { aiSystems = s.aiSystems; aiSysCounter = s.aiSysCounter || 4; }
     if (s.aiRisks?.length)   { aiRisks = s.aiRisks; aiRiskCounter = s.aiRiskCounter || 4; }
+    if (s.auditYears?.length)  { auditYears = s.auditYears; renderAuditYearSel(); renderAuditPage(); }
+    if (s.mrYears?.length)     { mgmtReviews = s.mrYears; mrSessionCounter = s.mrSessionCounter || 2; mrOutputCounter = s.mrOutputCounter || 4; renderMRYearSel(); renderMRPage(); }
+    if (s.eduPrograms?.length) { eduPrograms = s.eduPrograms; eduProgCounter = s.eduProgCounter || 6; }
+    if (s.eduRecords?.length)  { eduRecords = s.eduRecords; eduRecCounter = s.eduRecCounter || 6; }
     // 再描画
     renderAssets(); updateMetrics(); renderRisks();
     renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
@@ -3308,8 +3318,9 @@ function exportData() {
       aiSystems,
       aiRisks,
       aiRiskCounter,
-      auditYears: window.auditYears,
-      mrYears: window.mrYears,
+      auditYears,
+      mrYears: mgmtReviews,
+      eduPrograms, eduRecords,
     }
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -3346,8 +3357,10 @@ function importData(input) {
       if (d.aiSystems)      aiSystems      = d.aiSystems;
       if (d.aiRisks)        aiRisks        = d.aiRisks;
       if (d.aiRiskCounter)  aiRiskCounter  = d.aiRiskCounter;
-      if (d.auditYears)     window.auditYears = d.auditYears;
-      if (d.mrYears)        window.mrYears    = d.mrYears;
+      if (d.auditYears)     auditYears    = d.auditYears;
+      if (d.mrYears)        mgmtReviews   = d.mrYears;
+      if (d.eduPrograms)    eduPrograms   = d.eduPrograms;
+      if (d.eduRecords)     eduRecords    = d.eduRecords;
       filteredAssets = [...assets];
       openDrawers = new Set();
       await saveAppState();
