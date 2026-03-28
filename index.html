@@ -496,6 +496,10 @@ _sb.auth.onAuthStateChange((event, session) => {
         <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="9" width="5" height="6" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="10" y="5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="5.5" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="3.5" y1="9" x2="3.5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="3.5" y1="6.5" x2="8" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="6.5" x2="8" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="12.5" y1="5" x2="12.5" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="12.5" y1="3.5" x2="8" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="3.5" x2="8" y2="6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         部門管理
       </div>
+      <div class="ni admin-only" data-page="org" onclick="showPage('org',this)">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="2.5" cy="12" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="13.5" cy="12" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="8" cy="12" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="8" y1="5" x2="8" y2="8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="2.5" y1="8.5" x2="13.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/><line x1="2.5" y1="8.5" x2="2.5" y2="10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="13.5" y1="8.5" x2="13.5" y2="10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="8.5" x2="8" y2="10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        組織管理
+      </div>
     </nav>
     <div class="user-bar">
       <div class="user-avatar" id="sb-avatar">?</div>
@@ -762,6 +766,128 @@ _sb.auth.onAuthStateChange((event, session) => {
             <thead><tr><th>ID</th><th>部門名</th><th>説明</th><th>責任者</th><th>ユーザー数</th><th>資産数</th><th></th></tr></thead>
             <tbody id="dept-tbody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- ===================== ORGANIZATION MANAGEMENT ===================== -->
+      <div class="page" id="page-org">
+        <div class="ph">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div class="pt">組織管理</div>
+                <span style="background:#E8F5E9;color:#1B5E20;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid #A5D6A7;">ISO 27001 §4.1 / §4.2 / §5.3</span>
+              </div>
+              <div class="ps">組織の課題・利害関係者のニーズと期待・役割と責任を定義・管理します</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sm" id="org-tab-btn-issues" onclick="showOrgTab('issues')">組織の課題</button>
+              <button class="btn btn-sm" id="org-tab-btn-parties" onclick="showOrgTab('parties')">利害関係者</button>
+              <button class="btn btn-sm" id="org-tab-btn-roles" onclick="showOrgTab('roles')">役割・責任</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: 組織の課題 (§4.1) -->
+        <div id="org-tab-issues">
+          <div class="metrics">
+            <div class="metric"><div class="mlb">内部課題数</div><div class="mv pur" id="org-int-cnt">0</div></div>
+            <div class="metric"><div class="mlb">外部課題数</div><div class="mv amb" id="org-ext-cnt">0</div></div>
+            <div class="metric"><div class="mlb">対応中</div><div class="mv red" id="org-open-cnt">0</div></div>
+            <div class="metric"><div class="mlb">解決済み</div><div class="mv grn" id="org-closed-cnt">0</div></div>
+          </div>
+          <!-- 内部課題 -->
+          <div class="card">
+            <div class="ch">
+              <div><div class="ct">内部課題</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">強み・弱み・内部環境に起因する課題（ISO 27001 §4.1）</div></div>
+              <button class="btn btn-primary btn-sm" onclick="toggleFP('issue-int-form')">＋ 追加</button>
+            </div>
+            <div class="fp" id="issue-int-form">
+              <div class="ft">内部課題の追加</div>
+              <div class="g2">
+                <div class="fg"><label class="fl">課題タイトル</label><input type="text" id="int-title" placeholder="例：セキュリティ人材の不足"></div>
+                <div class="fg"><label class="fl">影響度</label><select id="int-impact"><option>高</option><option>中</option><option>低</option></select></div>
+              </div>
+              <div class="fg"><label class="fl">詳細・説明</label><textarea id="int-desc" placeholder="例：情報セキュリティ専門知識を持つ人材が不足しており、適切なリスク管理が困難な状況"></textarea></div>
+              <div style="display:flex;gap:6px;margin-top:6px;">
+                <button class="btn btn-primary btn-sm" onclick="submitIssue('internal')">追加</button>
+                <button class="btn btn-sm" onclick="toggleFP('issue-int-form')">キャンセル</button>
+              </div>
+            </div>
+            <table class="tbl"><thead><tr><th>ID</th><th>課題タイトル</th><th>影響度</th><th>ステータス</th><th>詳細</th><th></th></tr></thead><tbody id="issue-int-tbody"></tbody></table>
+          </div>
+          <!-- 外部課題 -->
+          <div class="card">
+            <div class="ch">
+              <div><div class="ct">外部課題</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">機会・脅威・外部環境に起因する課題（ISO 27001 §4.1）</div></div>
+              <button class="btn btn-primary btn-sm" onclick="toggleFP('issue-ext-form')">＋ 追加</button>
+            </div>
+            <div class="fp" id="issue-ext-form">
+              <div class="ft">外部課題の追加</div>
+              <div class="g2">
+                <div class="fg"><label class="fl">課題タイトル</label><input type="text" id="ext-title" placeholder="例：サイバー攻撃の高度化・増加"></div>
+                <div class="fg"><label class="fl">影響度</label><select id="ext-impact"><option>高</option><option>中</option><option>低</option></select></div>
+              </div>
+              <div class="fg"><label class="fl">詳細・説明</label><textarea id="ext-desc" placeholder="例：ランサムウェアや標的型攻撃が急増しており、業界全体でインシデントが多発している"></textarea></div>
+              <div style="display:flex;gap:6px;margin-top:6px;">
+                <button class="btn btn-primary btn-sm" onclick="submitIssue('external')">追加</button>
+                <button class="btn btn-sm" onclick="toggleFP('issue-ext-form')">キャンセル</button>
+              </div>
+            </div>
+            <table class="tbl"><thead><tr><th>ID</th><th>課題タイトル</th><th>影響度</th><th>ステータス</th><th>詳細</th><th></th></tr></thead><tbody id="issue-ext-tbody"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Tab: 利害関係者 (§4.2) -->
+        <div id="org-tab-parties" style="display:none;">
+          <div class="metrics">
+            <div class="metric"><div class="mlb">利害関係者数</div><div class="mv pur" id="org-ip-cnt">0</div></div>
+            <div class="metric"><div class="mlb">ニーズ登録済み</div><div class="mv grn" id="org-ip-needs-cnt">0</div></div>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div><div class="ct">利害関係者とニーズ・期待</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">ISMSに関連する利害関係者のニーズと期待を特定・記録します（ISO 27001 §4.2）</div></div>
+              <button class="btn btn-primary btn-sm" onclick="toggleFP('ip-add-form')">＋ 追加</button>
+            </div>
+            <div class="fp" id="ip-add-form">
+              <div class="ft">利害関係者の追加</div>
+              <div class="g2">
+                <div class="fg"><label class="fl">利害関係者名</label><input type="text" id="ip-name" placeholder="例：顧客・取引先"></div>
+                <div class="fg"><label class="fl">種別</label><select id="ip-type"><option>顧客</option><option>株主・投資家</option><option>従業員</option><option>規制当局・行政</option><option>取引先・サプライヤー</option><option>社会・地域</option><option>その他</option></select></div>
+              </div>
+              <div class="fg"><label class="fl">ニーズと期待</label><textarea id="ip-needs" placeholder="例：個人情報の適切な管理、情報漏洩の防止、セキュリティ対策の透明性確保"></textarea></div>
+              <div class="fg"><label class="fl">ISMSとの関連性</label><input type="text" id="ip-relevance" placeholder="例：個人情報保護法・GDPR対応、契約上のセキュリティ要件"></div>
+              <div style="display:flex;gap:6px;margin-top:6px;">
+                <button class="btn btn-primary btn-sm" onclick="submitIP()">追加</button>
+                <button class="btn btn-sm" onclick="toggleFP('ip-add-form')">キャンセル</button>
+              </div>
+            </div>
+            <table class="tbl"><thead><tr><th>ID</th><th>利害関係者</th><th>種別</th><th>ニーズと期待</th><th>ISMSとの関連性</th><th></th></tr></thead><tbody id="ip-tbody"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Tab: 役割・責任 (§5.3) -->
+        <div id="org-tab-roles" style="display:none;">
+          <div class="card">
+            <div class="ch"><div class="ct">ISMSの役割と責任</div><div style="font-size:11px;color:var(--text3);">ISO 27001 §5.3 — ユーザー一覧から担当者を選択してください</div></div>
+            <div id="org-roles-body" style="padding:8px 0;"></div>
+            <div style="margin-top:16px;">
+              <button class="btn btn-primary btn-sm" onclick="saveRoles()">役割を保存</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px;">
+            <div class="ct" style="margin-bottom:12px;">役割の説明</div>
+            <table class="tbl">
+              <thead><tr><th>役割</th><th>ISO 27001 参照</th><th>主な責任</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:600;">トップマネジメント</td><td style="color:#888;">§5.1</td><td>ISMSの確立・導入・維持・継続的改善への責任。方針の承認・リソースの提供</td></tr>
+                <tr><td style="font-weight:600;">ISMS責任者</td><td style="color:#888;">§5.3</td><td>ISMSの計画・運用・パフォーマンス評価の統括。トップマネジメントへの報告</td></tr>
+                <tr><td style="font-weight:600;">ISMS担当者</td><td style="color:#888;">§5.3</td><td>リスクアセスメント・管理策の実施・文書管理・従業員教育の実施</td></tr>
+                <tr><td style="font-weight:600;">内部監査責任者</td><td style="color:#888;">§9.2</td><td>内部監査プログラムの策定・監査チームの管理・監査報告のとりまとめ</td></tr>
+                <tr><td style="font-weight:600;">内部監査員</td><td style="color:#888;">§9.2</td><td>内部監査の実施・不適合の特定・是正処置の確認</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1482,6 +1608,308 @@ async function changePassword() {
 }
 
 // ============================================================
+// ORGANIZATION MANAGEMENT (§4.1 / §4.2 / §5.3)
+// ============================================================
+let orgIssues = [], orgIssueCounter = 1;
+let interestedParties = [], ipCounter = 1;
+let orgRoles = { topMgmt: '', ismsMgr: '', ismsOfficers: [], auditMgr: '', auditors: [] };
+
+const ROLE_DEFS = [
+  { key: 'topMgmt',      label: 'トップマネジメント', multi: false, iso: '§5.1' },
+  { key: 'ismsMgr',      label: 'ISMS責任者',          multi: false, iso: '§5.3' },
+  { key: 'ismsOfficers', label: 'ISMS担当者',           multi: true,  iso: '§5.3' },
+  { key: 'auditMgr',     label: '内部監査責任者',       multi: false, iso: '§9.2' },
+  { key: 'auditors',     label: '内部監査員',           multi: true,  iso: '§9.2' },
+];
+
+const IMPACT_BADGE = { '高': 'b-admin', '中': 'b-review', '低': 'b-user' };
+const STATUS_BADGE  = { 'open': 'b-review', 'closed': 'b-approved' };
+const STATUS_LBL    = { 'open': '対応中', 'closed': '解決済み' };
+
+function showOrgTab(tab) {
+  ['issues','parties','roles'].forEach(t => {
+    const el = document.getElementById('org-tab-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    const btn = document.getElementById('org-tab-btn-' + t);
+    if (btn) { btn.classList.toggle('btn-primary', t === tab); }
+  });
+  if (tab === 'issues')  renderOrgIssues();
+  if (tab === 'parties') renderInterestedParties();
+  if (tab === 'roles')   renderRoles();
+}
+
+function renderOrg() { showOrgTab('issues'); }
+
+// ---------- 組織の課題 ----------
+function renderOrgIssues() {
+  const internal = orgIssues.filter(i => i.type === 'internal');
+  const external = orgIssues.filter(i => i.type === 'external');
+  const open     = orgIssues.filter(i => i.status === 'open');
+  const closed   = orgIssues.filter(i => i.status === 'closed');
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('org-int-cnt',    internal.length);
+  set('org-ext-cnt',    external.length);
+  set('org-open-cnt',   open.length);
+  set('org-closed-cnt', closed.length);
+  renderIssueTable('issue-int-tbody', internal);
+  renderIssueTable('issue-ext-tbody', external);
+}
+
+function renderIssueTable(tbodyId, issues) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = issues.map(i => `
+    <tr id="irow-${i.id}">
+      <td style="color:#999;font-size:11px;">${i.id}</td>
+      <td style="font-weight:600;">${i.title}</td>
+      <td><span class="badge ${IMPACT_BADGE[i.impact]||'b-user'}">${i.impact}</span></td>
+      <td><span class="badge ${STATUS_BADGE[i.status]||'b-user'}">${STATUS_LBL[i.status]||i.status}</span></td>
+      <td style="color:#888;font-size:11px;max-width:260px;">${i.desc||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-ghost" onclick="editIssue('${i.id}')">編集</button>
+        <button class="btn-ghost" onclick="toggleIssueStatus('${i.id}')">${i.status==='open'?'解決':'再開'}</button>
+        <button class="btn-ghost" style="color:var(--red);" onclick="deleteIssue('${i.id}')">削除</button>
+      </td>
+    </tr>
+    <tr id="iedit-${i.id}" style="display:none;background:var(--surface2);">
+      <td colspan="6" style="padding:12px 16px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">課題タイトル</div>
+            <input id="ie-title-${i.id}" type="text" value="${i.title.replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:200px;">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">影響度</div>
+            <select id="ie-impact-${i.id}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;">
+              ${['高','中','低'].map(v=>`<option${v===i.impact?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">詳細</div>
+            <input id="ie-desc-${i.id}" type="text" value="${(i.desc||'').replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:100%;">
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="saveIssue('${i.id}')">保存</button>
+          <button class="btn btn-sm" onclick="cancelEditIssue('${i.id}')">キャンセル</button>
+        </div>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">登録なし</td></tr>`;
+}
+
+function submitIssue(type) {
+  const pfx = type === 'internal' ? 'int' : 'ext';
+  const title = document.getElementById(pfx + '-title').value.trim();
+  if (!title) { showToast('課題タイトルを入力してください'); return; }
+  const id = 'I-' + String(orgIssueCounter++).padStart(3, '0');
+  orgIssues.push({
+    id, type,
+    title,
+    impact: document.getElementById(pfx + '-impact').value,
+    desc:   document.getElementById(pfx + '-desc').value.trim(),
+    status: 'open',
+  });
+  document.getElementById(pfx + '-title').value = '';
+  document.getElementById(pfx + '-desc').value  = '';
+  toggleFP('issue-' + pfx + '-form');
+  renderOrgIssues();
+  queueSave();
+  showToast('課題を追加しました');
+}
+
+function editIssue(id) {
+  document.getElementById('iedit-' + id).style.display = '';
+  document.getElementById('irow-'  + id).style.background = 'var(--accent-bg)';
+}
+function cancelEditIssue(id) {
+  document.getElementById('iedit-' + id).style.display = 'none';
+  document.getElementById('irow-'  + id).style.background = '';
+}
+function saveIssue(id) {
+  const i = orgIssues.find(x => x.id === id);
+  if (!i) return;
+  const title = document.getElementById('ie-title-' + id).value.trim();
+  if (!title) { showToast('課題タイトルを入力してください'); return; }
+  i.title  = title;
+  i.impact = document.getElementById('ie-impact-' + id).value;
+  i.desc   = document.getElementById('ie-desc-'   + id).value.trim();
+  cancelEditIssue(id);
+  renderOrgIssues();
+  queueSave();
+  showToast('課題を更新しました');
+}
+function toggleIssueStatus(id) {
+  const i = orgIssues.find(x => x.id === id);
+  if (!i) return;
+  i.status = i.status === 'open' ? 'closed' : 'open';
+  renderOrgIssues();
+  queueSave();
+}
+function deleteIssue(id) {
+  if (!confirm('この課題を削除しますか？')) return;
+  orgIssues = orgIssues.filter(x => x.id !== id);
+  renderOrgIssues();
+  queueSave();
+  showToast('課題を削除しました');
+}
+
+// ---------- 利害関係者 ----------
+function renderInterestedParties() {
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('org-ip-cnt',       interestedParties.length);
+  set('org-ip-needs-cnt', interestedParties.filter(p => p.needs).length);
+  const tbody = document.getElementById('ip-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = interestedParties.map(p => `
+    <tr id="iprow-${p.id}">
+      <td style="color:#999;font-size:11px;">${p.id}</td>
+      <td style="font-weight:600;">${p.name}</td>
+      <td><span class="tag">${p.type}</span></td>
+      <td style="color:#888;font-size:11px;max-width:220px;">${p.needs||'—'}</td>
+      <td style="color:#888;font-size:11px;">${p.relevance||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-ghost" onclick="editIP('${p.id}')">編集</button>
+        <button class="btn-ghost" style="color:var(--red);" onclick="deleteIP('${p.id}')">削除</button>
+      </td>
+    </tr>
+    <tr id="ipedit-${p.id}" style="display:none;background:var(--surface2);">
+      <td colspan="6" style="padding:12px 16px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">利害関係者名</div>
+            <input id="ipe-name-${p.id}" type="text" value="${p.name.replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">種別</div>
+            <select id="ipe-type-${p.id}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;">
+              ${['顧客','株主・投資家','従業員','規制当局・行政','取引先・サプライヤー','社会・地域','その他'].map(v=>`<option${v===p.type?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">ニーズと期待</div>
+            <input id="ipe-needs-${p.id}" type="text" value="${(p.needs||'').replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:100%;">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">ISMSとの関連性</div>
+            <input id="ipe-rel-${p.id}" type="text" value="${(p.relevance||'').replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:100%;">
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="saveIP('${p.id}')">保存</button>
+          <button class="btn btn-sm" onclick="cancelEditIP('${p.id}')">キャンセル</button>
+        </div>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px;">登録なし</td></tr>`;
+}
+
+function submitIP() {
+  const name = document.getElementById('ip-name').value.trim();
+  if (!name) { showToast('利害関係者名を入力してください'); return; }
+  const id = 'IP-' + String(ipCounter++).padStart(3, '0');
+  interestedParties.push({
+    id, name,
+    type:      document.getElementById('ip-type').value,
+    needs:     document.getElementById('ip-needs').value.trim(),
+    relevance: document.getElementById('ip-relevance').value.trim(),
+  });
+  document.getElementById('ip-name').value      = '';
+  document.getElementById('ip-needs').value     = '';
+  document.getElementById('ip-relevance').value = '';
+  toggleFP('ip-add-form');
+  renderInterestedParties();
+  queueSave();
+  showToast('利害関係者を追加しました');
+}
+function editIP(id) {
+  document.getElementById('ipedit-' + id).style.display = '';
+  document.getElementById('iprow-'  + id).style.background = 'var(--accent-bg)';
+}
+function cancelEditIP(id) {
+  document.getElementById('ipedit-' + id).style.display = 'none';
+  document.getElementById('iprow-'  + id).style.background = '';
+}
+function saveIP(id) {
+  const p = interestedParties.find(x => x.id === id);
+  if (!p) return;
+  const name = document.getElementById('ipe-name-' + id).value.trim();
+  if (!name) { showToast('利害関係者名を入力してください'); return; }
+  p.name      = name;
+  p.type      = document.getElementById('ipe-type-'  + id).value;
+  p.needs     = document.getElementById('ipe-needs-' + id).value.trim();
+  p.relevance = document.getElementById('ipe-rel-'   + id).value.trim();
+  cancelEditIP(id);
+  renderInterestedParties();
+  queueSave();
+  showToast('利害関係者を更新しました');
+}
+function deleteIP(id) {
+  if (!confirm('この利害関係者を削除しますか？')) return;
+  interestedParties = interestedParties.filter(x => x.id !== id);
+  renderInterestedParties();
+  queueSave();
+  showToast('利害関係者を削除しました');
+}
+
+// ---------- 役割・責任 ----------
+function buildUserOpts(selectedId) {
+  const users = typeof USERS !== 'undefined' ? USERS : [];
+  return `<option value="">— 未選択 —</option>` +
+    users.map(u => `<option value="${u.id}"${u.id === selectedId ? ' selected' : ''}>${u.displayName}（${u.dept}）</option>`).join('');
+}
+
+function renderRoles() {
+  const body = document.getElementById('org-roles-body');
+  if (!body) return;
+  body.innerHTML = ROLE_DEFS.map(r => {
+    if (!r.multi) {
+      return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="width:160px;font-weight:600;font-size:13px;">${r.label}<span style="margin-left:6px;font-size:10px;color:var(--text3);">${r.iso}</span></div>
+        <select id="role-${r.key}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;min-width:220px;">${buildUserOpts(orgRoles[r.key])}</select>
+      </div>`;
+    } else {
+      const assigned = orgRoles[r.key] || [];
+      const chips = assigned.map((uid, idx) => {
+        const u = (typeof USERS !== 'undefined' ? USERS : []).find(x => x.id === uid);
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <select id="role-${r.key}-${idx}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;min-width:200px;">${buildUserOpts(uid)}</select>
+          <button class="btn btn-sm" style="padding:4px 8px;" onclick="removeRoleSlot('${r.key}',${idx})">−</button>
+        </div>`;
+      }).join('');
+      return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:160px;font-weight:600;font-size:13px;">${r.label}<span style="margin-left:6px;font-size:10px;color:var(--text3);">${r.iso}</span></div>
+          <button class="btn btn-sm" onclick="addRoleSlot('${r.key}')">＋ 担当者を追加</button>
+        </div>
+        <div id="role-slots-${r.key}" style="padding-left:168px;">${chips || '<div style="color:var(--text3);font-size:12px;padding-left:0;">未設定</div>'}</div>
+      </div>`;
+    }
+  }).join('');
+}
+
+function addRoleSlot(key) {
+  if (!orgRoles[key]) orgRoles[key] = [];
+  orgRoles[key].push('');
+  renderRoles();
+}
+function removeRoleSlot(key, idx) {
+  orgRoles[key].splice(idx, 1);
+  renderRoles();
+}
+
+function saveRoles() {
+  ROLE_DEFS.forEach(r => {
+    if (!r.multi) {
+      const el = document.getElementById('role-' + r.key);
+      if (el) orgRoles[r.key] = el.value;
+    } else {
+      const assigned = orgRoles[r.key] || [];
+      orgRoles[r.key] = assigned.map((_, idx) => {
+        const el = document.getElementById(`role-${r.key}-${idx}`);
+        return el ? el.value : '';
+      }).filter(v => v);
+    }
+  });
+  queueSave();
+  showToast('役割・責任を保存しました');
+}
+
+// ============================================================
 // DEPARTMENT MANAGEMENT
 // ============================================================
 function initDepts() {
@@ -2060,6 +2488,7 @@ function showPage(name,el){
   if(name==='risk'){renderProposals();populateAsel();}
   if(name==='users'){renderUsers();}
   if(name==='depts'){renderDepts();}
+  if(name==='org'){renderOrg();}
   if(name==='audit'){renderAuditPage();}
   if(name==='mgmt-review'){renderMRPage();}
   if(name==='education'){renderEducation();showEduTab('programs');}
@@ -3401,6 +3830,7 @@ async function saveAppState() {
       auditYears, mrYears: mgmtReviews, mrSessionCounter, mrOutputCounter,
       eduPrograms, eduRecords, eduProgCounter, eduRecCounter,
       departments, deptCounter,
+      orgIssues, orgIssueCounter, interestedParties, ipCounter, orgRoles,
     };
     await supabase.from('org_data').upsert({
       key: 'app_state',
@@ -3427,6 +3857,9 @@ async function loadAppState() {
     if (s.departments?.length) { departments = s.departments; deptCounter = s.deptCounter || departments.length + 1; }
     else { initDepts(); }
     populateDeptSel();
+    if (s.orgIssues?.length)         { orgIssues = s.orgIssues; orgIssueCounter = s.orgIssueCounter || orgIssues.length + 1; }
+    if (s.interestedParties?.length) { interestedParties = s.interestedParties; ipCounter = s.ipCounter || interestedParties.length + 1; }
+    if (s.orgRoles)                  { orgRoles = { topMgmt:'', ismsMgr:'', ismsOfficers:[], auditMgr:'', auditors:[], ...s.orgRoles }; }
     // 再描画
     renderAssets(); updateMetrics(); renderRisks();
     renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
@@ -3544,6 +3977,7 @@ function exportData() {
       mrYears: mgmtReviews,
       eduPrograms, eduRecords,
       departments, deptCounter,
+      orgIssues, orgIssueCounter, interestedParties, ipCounter, orgRoles,
     }
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -3584,7 +4018,10 @@ function importData(input) {
       if (d.mrYears)        mgmtReviews   = d.mrYears;
       if (d.eduPrograms)    eduPrograms   = d.eduPrograms;
       if (d.eduRecords)     eduRecords    = d.eduRecords;
-      if (d.departments)    { departments = d.departments; deptCounter = d.deptCounter || departments.length + 1; }
+      if (d.departments)       { departments = d.departments; deptCounter = d.deptCounter || departments.length + 1; }
+      if (d.orgIssues)         { orgIssues = d.orgIssues; orgIssueCounter = d.orgIssueCounter || orgIssues.length + 1; }
+      if (d.interestedParties) { interestedParties = d.interestedParties; ipCounter = d.ipCounter || interestedParties.length + 1; }
+      if (d.orgRoles)          { orgRoles = { topMgmt:'', ismsMgr:'', ismsOfficers:[], auditMgr:'', auditors:[], ...d.orgRoles }; }
       filteredAssets = [...assets];
       populateDeptSel();
       openDrawers = new Set();
