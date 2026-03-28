@@ -1849,7 +1849,7 @@ function deleteIP(id) {
 // ---------- 役割・責任 ----------
 function buildUserOpts(selectedId) {
   const users = typeof USERS !== 'undefined' ? USERS : [];
-  return `<option value="">— 未選択 —</option>` +
+  return `<option value="">未選択</option>` +
     users.map(u => `<option value="${u.id}"${u.id === selectedId ? ' selected' : ''}>${u.displayName}（${u.dept}）</option>`).join('');
 }
 
