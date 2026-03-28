@@ -547,7 +547,14 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="ft">資産の新規登録</div>
             <div class="g2">
               <div class="fg"><label class="fl">資産名</label><input type="text" id="a-name" placeholder="例：顧客データベース"></div>
-              <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat"><option>情報</option><option>ハードウェア</option><option>ソフトウェア</option><option>ネットワーク</option><option>拠点</option><option>組織</option></select></div>
+              <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat">
+                <optgroup label="情報"><option value="情報 &gt; データ">データ</option><option value="情報 &gt; 紙媒体">紙媒体</option></optgroup>
+                <optgroup label="ハードウェア"><option value="ハードウェア &gt; サーバ・ネットワーク機器">サーバ・ネットワーク機器</option><option value="ハードウェア &gt; ユーザー端末">ユーザー端末</option><option value="ハードウェア &gt; 外部記憶媒体">外部記憶媒体</option></optgroup>
+                <optgroup label="ソフトウェア"><option value="ソフトウェア &gt; インストール型">インストール型</option><option value="ソフトウェア &gt; クラウド型">クラウド型</option><option value="ソフトウェア &gt; 自社開発">自社開発</option></optgroup>
+                <option value="ネットワーク">ネットワーク</option>
+                <optgroup label="拠点"><option value="拠点 &gt; オフィス">オフィス</option><option value="拠点 &gt; リモートワーク">リモートワーク</option></optgroup>
+                <option value="組織">組織</option>
+              </select></div>
               <div class="fg"><label class="fl">機密区分</label><select id="a-cls"><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select></div>
               <div class="fg"><label class="fl">管理部門</label><select id="a-dept"><option value="">— 未設定 —</option></select></div>
               <div class="fg"><label class="fl">管理担当者</label><input type="text" id="a-owner" placeholder="例：山田 太郎"></div>
@@ -560,7 +567,7 @@ _sb.auth.onAuthStateChange((event, session) => {
             </div>
           </div>
           <div class="fb">
-            <select id="f-cat" onchange="filterA()"><option value="">カテゴリ: すべて</option><option>情報</option><option>ハードウェア</option><option>ソフトウェア</option><option>ネットワーク</option><option>拠点</option><option>組織</option></select>
+            <select id="f-cat" onchange="filterA()"><option value="">カテゴリ: すべて</option><option value="情報">情報</option><option value="ハードウェア">ハードウェア</option><option value="ソフトウェア">ソフトウェア</option><option value="ネットワーク">ネットワーク</option><option value="拠点">拠点</option><option value="組織">組織</option></select>
             <select id="f-cls" onchange="filterA()"><option value="">機密区分: すべて</option><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select>
             <input type="text" id="f-q" placeholder="資産名で検索..." oninput="filterA()">
           </div>
@@ -1641,6 +1648,30 @@ function showToast(msg) {
 const clsBadge={'極秘':'b-secret','機密':'b-conf','社外秘':'b-internal','公開':'b-public'};
 const clsColor={'極秘':'#C0392B','機密':'#E67E22','社外秘':'#2980B9','公開':'#27AE60'};
 
+const CAT_TREE = [
+  { parent: '情報',        subs: ['データ', '紙媒体'] },
+  { parent: 'ハードウェア', subs: ['サーバ・ネットワーク機器', 'ユーザー端末', '外部記憶媒体'] },
+  { parent: 'ソフトウェア', subs: ['インストール型', 'クラウド型', '自社開発'] },
+  { parent: 'ネットワーク', subs: [] },
+  { parent: '拠点',        subs: ['オフィス', 'リモートワーク'] },
+  { parent: '組織',        subs: [] },
+];
+
+function parentCat(cat) { return cat ? cat.split(' > ')[0] : ''; }
+
+function buildCatOptions(currentVal) {
+  return CAT_TREE.map(g => {
+    if (!g.subs.length) {
+      return `<option value="${g.parent}"${g.parent === currentVal ? ' selected' : ''}>${g.parent}</option>`;
+    }
+    const opts = g.subs.map(s => {
+      const v = `${g.parent} > ${s}`;
+      return `<option value="${v}"${v === currentVal ? ' selected' : ''}>${s}</option>`;
+    }).join('');
+    return `<optgroup label="${g.parent}">${opts}</optgroup>`;
+  }).join('');
+}
+
 const RISK_TMPL = {
   '情報':[
     {name:'機密情報の不正漏洩',cia:'機密性',impact:5,prob:3,action:'アクセス制御の強化・暗号化の実施',iso:'A.8.2',desc:'権限のない者による情報へのアクセスや持ち出しにより機密性が損なわれるリスク'},
@@ -1679,10 +1710,10 @@ let assets, risks, proposedRisks, riskCounter, responseCounter, filteredAssets, 
 
 function initApp() {
   assets = [
-    {id:'A-001',name:'顧客データベース',cat:'情報',cls:'極秘',dept:'情報システム部',owner:'山田 太郎',loc:'AWS RDS',desc:'顧客の個人情報・購買履歴を格納するメインDB'},
-    {id:'A-002',name:'社員人事情報',cat:'情報',cls:'極秘',dept:'人事部',owner:'佐藤 花子',loc:'社内オンプレ',desc:'社員の個人情報・給与・評価情報'},
-    {id:'A-003',name:'Active Directory',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'社内サーバー室',desc:'全社認証・権限管理システム'},
-    {id:'A-004',name:'基幹業務システム',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'田中 次郎',loc:'AWS EC2',desc:'受発注・在庫管理の中核システム'},
+    {id:'A-001',name:'顧客データベース',cat:'情報 > データ',cls:'極秘',dept:'情報システム部',owner:'山田 太郎',loc:'AWS RDS',desc:'顧客の個人情報・購買履歴を格納するメインDB'},
+    {id:'A-002',name:'社員人事情報',cat:'情報 > データ',cls:'極秘',dept:'人事部',owner:'佐藤 花子',loc:'社内オンプレ',desc:'社員の個人情報・給与・評価情報'},
+    {id:'A-003',name:'Active Directory',cat:'ソフトウェア > インストール型',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'社内サーバー室',desc:'全社認証・権限管理システム'},
+    {id:'A-004',name:'基幹業務システム',cat:'ソフトウェア > クラウド型',cls:'機密',dept:'情報システム部',owner:'田中 次郎',loc:'AWS EC2',desc:'受発注・在庫管理の中核システム'},
     {id:'A-005',name:'社内ネットワーク機器',cat:'ネットワーク',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'本社サーバー室',desc:'ルーター・スイッチ・ファイアウォール一式'},
   ];
   risks = [
@@ -1730,7 +1761,7 @@ function initApp() {
 function renderAssets() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   const tb = document.getElementById('a-tbody');
-  const catOpts = ['情報','ハードウェア','ソフトウェア','ネットワーク','拠点','組織'].map(c=>`<option ${c==='{C}'?'selected':''}>${c}</option>`);
+  const catOpts = buildCatOptions('');
   const clsOpts = ['極秘','機密','社外秘','公開'].map(c=>`<option ${c==='{L}'?'selected':''}>${c}</option>`);
   tb.innerHTML = filteredAssets.map(a => {
     const linked = risks.filter(r => r.assetId === a.id);
@@ -1740,8 +1771,7 @@ function renderAssets() {
     const actionBtns = isAdmin ? `
       <button class="btn-ghost" onclick="editAsset('${a.id}')">編集</button>
       <button class="btn-ghost" onclick="openModal('${a.id}')">＋ リスク提案</button>` : '';
-    const catSel = ['情報','ハードウェア','ソフトウェア','ネットワーク','拠点','組織']
-      .map(c=>`<option value="${c}"${c===a.cat?' selected':''}>${c}</option>`).join('');
+    const catSel = buildCatOptions(a.cat);
     const clsSel = ['極秘','機密','社外秘','公開']
       .map(c=>`<option value="${c}"${c===a.cls?' selected':''}>${c}</option>`).join('');
     return `<tr id="arow-${a.id}">
@@ -1988,7 +2018,7 @@ function openModal(assetId) {
   const a=assets.find(x=>x.id===assetId);if(!a)return;
   const existing=risks.filter(r=>r.assetId===assetId).map(r=>r.name);
   const pending=proposedRisks.filter(p=>p.assetId===assetId).map(p=>p.name);
-  const tmpls=(RISK_TMPL[a.cat]||[]).filter(t=>!existing.includes(t.name)&&!pending.includes(t.name));
+  const tmpls=(RISK_TMPL[parentCat(a.cat)]||[]).filter(t=>!existing.includes(t.name)&&!pending.includes(t.name));
   document.getElementById('m-title').textContent=`リスク自動提案：${a.name}`;
   document.getElementById('m-sub').textContent=`カテゴリ「${a.cat}」/ ${a.cls} — ISO 27001 付属書Aに基づくリスク候補`;
   if(!tmpls.length){document.getElementById('m-body').innerHTML='<div style="text-align:center;padding:32px;color:#bbb;">このカテゴリのリスクはすべて登録済みまたは提案済みです</div>';document.getElementById('m-info').textContent='';modalProposals=[];}
@@ -2043,7 +2073,7 @@ function toggleFP(id){const f=document.getElementById(id);if(f)f.style.display=f
 
 function filterA(){
   const cat=document.getElementById('f-cat').value,cls=document.getElementById('f-cls').value,q=document.getElementById('f-q').value.toLowerCase();
-  filteredAssets=assets.filter(a=>(!cat||a.cat===cat)&&(!cls||a.cls===cls)&&(!q||a.name.toLowerCase().includes(q)));
+  filteredAssets=assets.filter(a=>(!cat||parentCat(a.cat)===cat)&&(!cls||a.cls===cls)&&(!q||a.name.toLowerCase().includes(q)));
   renderAssets();
 }
 function submitAsset(){
