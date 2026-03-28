@@ -492,6 +492,10 @@ _sb.auth.onAuthStateChange((event, session) => {
         <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 13c0-3 2-4 5-4s5 1 5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/><line x1="12" y1="7" x2="12" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         ユーザー管理
       </div>
+      <div class="ni admin-only" data-page="departments" onclick="showPage('departments',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="6" height="9" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="9" y="2" width="6" height="12" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="4" y1="8" x2="4" y2="8.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="11" x2="4" y2="11.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="5" x2="12" y2="5.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="8" x2="12" y2="8.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="11" x2="12" y2="11.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        部門管理
+      </div>
     </nav>
     <div class="user-bar">
       <div class="user-avatar" id="sb-avatar">?</div>
@@ -692,7 +696,7 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="g2">
               <div class="fg"><label class="fl">ユーザーID</label><input type="text" id="u-id" placeholder="例：tanaka"></div>
               <div class="fg"><label class="fl">氏名</label><input type="text" id="u-disp" placeholder="例：田中 次郎"></div>
-              <div class="fg"><label class="fl">部署</label><input type="text" id="u-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">部署</label><input type="text" id="u-dept" placeholder="例：情報システム部" list="dept-datalist"><datalist id="dept-datalist"></datalist></div>
               <div class="fg"><label class="fl">権限</label><select id="u-role"><option value="user">一般ユーザー</option><option value="admin">管理者</option></select></div>
               <div class="fg"><label class="fl">パスワード</label><input type="password" id="u-pw" placeholder="パスワードを設定"></div>
               <div class="fg"><label class="fl">パスワード（確認）</label><input type="password" id="u-pw2" placeholder="もう一度入力"></div>
@@ -722,6 +726,24 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="fg"><label class="fl">新しいパスワード（確認）</label><input type="password" id="pw-new2" placeholder="もう一度入力"></div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="changePassword()">パスワードを変更</button>
+        </div>
+      </div>
+
+      <!-- ===================== DEPARTMENTS ===================== -->
+      <div class="page" id="page-departments">
+        <div class="ph"><div class="pt">部門管理</div><div class="ps">組織の部門を登録・管理します（管理者専用）</div></div>
+        <div class="card">
+          <div class="ch"><div class="ct">部門一覧</div><button class="btn btn-primary btn-sm admin-only" onclick="toggleFP('dept-add-form')">＋ 部門を追加</button></div>
+          <div class="fp" id="dept-add-form">
+            <div class="ft">新規部門の追加</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">部門名</label><input type="text" id="dept-name" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">部門長</label><input type="text" id="dept-manager" placeholder="例：山田 太郎"></div>
+            </div>
+            <div class="fg"><label class="fl">説明・業務範囲（任意）</label><input type="text" id="dept-desc" placeholder="例：IT基盤管理・情報セキュリティ運用"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;"><button class="btn btn-primary btn-sm" onclick="addDepartment()">追加</button><button class="btn btn-sm" onclick="toggleFP('dept-add-form')">キャンセル</button></div>
+          </div>
+          <div id="dept-list"></div>
         </div>
       </div>
 
@@ -1331,7 +1353,7 @@ async function bootApp() {
     el.style.display = currentUser.role !== 'admin' ? 'block' : 'none';
   });
   initApp();
-  await Promise.all([loadAppState(), loadUsers()]);
+  await Promise.all([loadAppState(), loadUsers(), loadDepartments()]);
   renderUsers();
 }
 
@@ -1377,7 +1399,7 @@ function renderUsers() {
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部署</div>
-          <input id="udept-${u.id}" type="text" value="${u.dept === '—' ? '' : u.dept}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+          <input id="udept-${u.id}" type="text" value="${u.dept === '—' ? '' : u.dept}" list="dept-datalist" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
         </div>
         <button class="btn btn-sm" onclick="saveUser('${u.id}')">保存</button>
         <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="cancelEditUser('${u.id}')">キャンセル</button>
@@ -1439,6 +1461,139 @@ async function changePassword() {
   document.getElementById('pw-new').value = '';
   document.getElementById('pw-new2').value = '';
   showToast('パスワードを変更しました');
+}
+
+// ============================================================
+// DEPARTMENT MANAGEMENT
+// ============================================================
+let DEPARTMENTS = [];
+
+async function loadDepartments() {
+  try {
+    const { data } = await supabase.from('org_data').select('value').eq('key','departments').single();
+    if (data?.value?.departments) DEPARTMENTS = data.value.departments;
+  } catch(e) { /* 初回は空 */ }
+  renderDepartments();
+  populateDeptDatalist();
+}
+
+async function saveDepartments() {
+  try {
+    await supabase.from('org_data').upsert({
+      key: 'departments',
+      value: { departments: DEPARTMENTS },
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser?.supabaseId,
+    });
+  } catch(e) { console.error('部門保存失敗:', e); }
+}
+
+function renderDepartments() {
+  const list = document.getElementById('dept-list');
+  if (!list) return;
+  if (!DEPARTMENTS.length) {
+    list.innerHTML = '<div style="color:var(--text3);padding:16px;">部門が登録されていません</div>';
+    return;
+  }
+  list.innerHTML = DEPARTMENTS.map(d => {
+    const memberCount = USERS.filter(u => u.dept === d.name).length;
+    return `
+    <div class="user-row" id="drow-${d.id}">
+      <div class="ua" style="background:var(--accent);border-radius:var(--r-sm);">${d.name.charAt(0)}</div>
+      <div class="u-info">
+        <div class="u-name-lg">${d.name}</div>
+        <div class="u-meta" style="display:flex;gap:8px;">
+          <span style="font-size:11px;color:var(--text3);">部門長: ${d.manager || '—'}</span>
+          ${d.desc ? `<span style="font-size:11px;color:var(--text3);">${d.desc}</span>` : ''}
+          <span class="badge b-user">メンバー ${memberCount}名</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="editDept('${d.id}')">編集</button>
+        <button class="btn btn-sm" style="color:#C0392B;border-color:#C0392B;" onclick="deleteDept('${d.id}')">削除</button>
+      </div>
+    </div>
+    <div id="dedit-${d.id}" style="display:none;padding:10px 16px 14px 56px;background:var(--surface2);border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部門名</div>
+          <input id="dname-${d.id}" type="text" value="${d.name}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部門長</div>
+          <input id="dmgr-${d.id}" type="text" value="${d.manager || ''}" placeholder="例：山田 太郎" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:140px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">説明</div>
+          <input id="ddesc-${d.id}" type="text" value="${d.desc || ''}" placeholder="業務範囲など" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:200px;">
+        </div>
+        <button class="btn btn-sm" onclick="saveDeptEdit('${d.id}')">保存</button>
+        <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="cancelEditDept('${d.id}')">キャンセル</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editDept(id) {
+  document.getElementById('dedit-' + id).style.display = 'block';
+  document.getElementById('drow-' + id).style.background = 'var(--accent-bg)';
+}
+
+function cancelEditDept(id) {
+  document.getElementById('dedit-' + id).style.display = 'none';
+  document.getElementById('drow-' + id).style.background = '';
+}
+
+async function saveDeptEdit(id) {
+  const d = DEPARTMENTS.find(x => x.id === id);
+  if (!d) return;
+  const name = document.getElementById('dname-' + id).value.trim();
+  if (!name) { showToast('部門名を入力してください'); return; }
+  d.name = name;
+  d.manager = document.getElementById('dmgr-' + id).value.trim();
+  d.desc = document.getElementById('ddesc-' + id).value.trim();
+  await saveDepartments();
+  renderDepartments();
+  populateDeptDatalist();
+  showToast('部門情報を更新しました');
+}
+
+async function addDepartment() {
+  const name = document.getElementById('dept-name').value.trim();
+  if (!name) { showToast('部門名を入力してください'); return; }
+  if (DEPARTMENTS.find(d => d.name === name)) { showToast('同名の部門がすでに存在します'); return; }
+  const id = 'dept-' + Date.now();
+  DEPARTMENTS.push({
+    id,
+    name,
+    manager: document.getElementById('dept-manager').value.trim(),
+    desc: document.getElementById('dept-desc').value.trim(),
+  });
+  await saveDepartments();
+  document.getElementById('dept-name').value = '';
+  document.getElementById('dept-manager').value = '';
+  document.getElementById('dept-desc').value = '';
+  toggleFP('dept-add-form');
+  renderDepartments();
+  populateDeptDatalist();
+  showToast('部門を追加しました');
+}
+
+async function deleteDept(id) {
+  const d = DEPARTMENTS.find(x => x.id === id);
+  if (!d) return;
+  if (!confirm(`「${d.name}」を削除しますか？`)) return;
+  DEPARTMENTS = DEPARTMENTS.filter(x => x.id !== id);
+  await saveDepartments();
+  renderDepartments();
+  populateDeptDatalist();
+  showToast('部門を削除しました');
+}
+
+function populateDeptDatalist() {
+  const dl = document.getElementById('dept-datalist');
+  if (!dl) return;
+  dl.innerHTML = DEPARTMENTS.map(d => `<option value="${d.name}">`).join('');
 }
 
 // ============================================================
