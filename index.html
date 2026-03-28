@@ -492,6 +492,10 @@ _sb.auth.onAuthStateChange((event, session) => {
         <svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 13c0-3 2-4 5-4s5 1 5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/><line x1="12" y1="7" x2="12" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         ユーザー管理
       </div>
+      <div class="ni admin-only" data-page="depts" onclick="showPage('depts',this)">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="9" width="5" height="6" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="10" y="5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="5.5" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><line x1="3.5" y1="9" x2="3.5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="3.5" y1="6.5" x2="8" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="6.5" x2="8" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="12.5" y1="5" x2="12.5" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="12.5" y1="3.5" x2="8" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="3.5" x2="8" y2="6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        部門管理
+      </div>
     </nav>
     <div class="user-bar">
       <div class="user-avatar" id="sb-avatar">?</div>
@@ -545,7 +549,7 @@ _sb.auth.onAuthStateChange((event, session) => {
               <div class="fg"><label class="fl">資産名</label><input type="text" id="a-name" placeholder="例：顧客データベース"></div>
               <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat"><option>情報・データ</option><option>ソフトウェア</option><option>ハードウェア</option><option>ネットワーク</option><option>人員・スキル</option><option>施設・設備</option></select></div>
               <div class="fg"><label class="fl">機密区分</label><select id="a-cls"><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select></div>
-              <div class="fg"><label class="fl">管理部門</label><input type="text" id="a-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">管理部門</label><select id="a-dept"><option value="">— 未設定 —</option></select></div>
               <div class="fg"><label class="fl">管理担当者</label><input type="text" id="a-owner" placeholder="例：山田 太郎"></div>
               <div class="fg"><label class="fl">保管場所</label><input type="text" id="a-loc" placeholder="例：AWS / 社内サーバー室"></div>
             </div>
@@ -692,7 +696,7 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="g2">
               <div class="fg"><label class="fl">ユーザーID</label><input type="text" id="u-id" placeholder="例：tanaka"></div>
               <div class="fg"><label class="fl">氏名</label><input type="text" id="u-disp" placeholder="例：田中 次郎"></div>
-              <div class="fg"><label class="fl">部署</label><input type="text" id="u-dept" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">部署</label><select id="u-dept"><option value="">— 未設定 —</option></select></div>
               <div class="fg"><label class="fl">権限</label><select id="u-role"><option value="user">一般ユーザー</option><option value="admin">管理者</option></select></div>
               <div class="fg"><label class="fl">パスワード</label><input type="password" id="u-pw" placeholder="パスワードを設定"></div>
               <div class="fg"><label class="fl">パスワード（確認）</label><input type="password" id="u-pw2" placeholder="もう一度入力"></div>
@@ -722,6 +726,35 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="fg"><label class="fl">新しいパスワード（確認）</label><input type="password" id="pw-new2" placeholder="もう一度入力"></div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="changePassword()">パスワードを変更</button>
+        </div>
+      </div>
+
+      <!-- Department Management (admin only) -->
+      <div class="page" id="page-depts">
+        <div class="ph"><div class="pt">部門管理</div><div class="ps">組織部門の登録・編集（管理者専用）。ユーザーと資産に紐づきます。</div></div>
+        <div class="metrics">
+          <div class="metric"><div class="mlb">登録部門数</div><div class="mv pur" id="d-dept-total">0</div></div>
+          <div class="metric"><div class="mlb">ユーザー紐づき</div><div class="mv grn" id="d-dept-users">—</div></div>
+          <div class="metric"><div class="mlb">資産紐づき</div><div class="mv amb" id="d-dept-assets">—</div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">部門一覧</div><button class="btn btn-primary btn-sm" onclick="toggleFP('dept-add-form')">＋ 部門を追加</button></div>
+          <div class="fp" id="dept-add-form">
+            <div class="ft">新規部門の追加</div>
+            <div class="g2">
+              <div class="fg"><label class="fl">部門名</label><input type="text" id="dept-name" placeholder="例：情報システム部"></div>
+              <div class="fg"><label class="fl">責任者</label><input type="text" id="dept-head" placeholder="例：山田 太郎"></div>
+            </div>
+            <div class="fg"><label class="fl">説明</label><input type="text" id="dept-desc" placeholder="例：IT基盤・情報セキュリティ管理"></div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button class="btn btn-primary btn-sm" onclick="submitDept()">追加</button>
+              <button class="btn btn-sm" onclick="toggleFP('dept-add-form')">キャンセル</button>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>部門名</th><th>説明</th><th>責任者</th><th>ユーザー数</th><th>資産数</th><th></th></tr></thead>
+            <tbody id="dept-tbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -1377,7 +1410,7 @@ function renderUsers() {
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部署</div>
-          <input id="udept-${u.id}" type="text" value="${u.dept === '—' ? '' : u.dept}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+          <select id="udept-${u.id}" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">${getDeptOptions(u.dept === '—' ? '' : u.dept)}</select>
         </div>
         <button class="btn btn-sm" onclick="saveUser('${u.id}')">保存</button>
         <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);" onclick="cancelEditUser('${u.id}')">キャンセル</button>
@@ -1442,6 +1475,157 @@ async function changePassword() {
 }
 
 // ============================================================
+// DEPARTMENT MANAGEMENT
+// ============================================================
+function initDepts() {
+  if (departments.length > 0) return;
+  departments = [
+    {id:'D-001', name:'情報システム部', desc:'IT基盤・情報セキュリティ管理', head:''},
+    {id:'D-002', name:'人事部',         desc:'人事・労務・採用管理',          head:''},
+    {id:'D-003', name:'総務部',         desc:'総務・施設・庶務管理',          head:''},
+    {id:'D-004', name:'営業部',         desc:'営業・顧客管理',                head:''},
+    {id:'D-005', name:'経営企画部',     desc:'経営戦略・企画立案',            head:''},
+  ];
+  deptCounter = 6;
+}
+
+function getDeptOptions(currentVal) {
+  const opts = departments.map(d =>
+    `<option value="${d.name}"${d.name === currentVal ? ' selected' : ''}>${d.name}</option>`
+  ).join('');
+  const notInList = currentVal && currentVal !== '未設定' && !departments.find(d => d.name === currentVal);
+  return `<option value="">— 未設定 —</option>${opts}${notInList ? `<option value="${currentVal}" selected>${currentVal}</option>` : ''}`;
+}
+
+function populateDeptSel() {
+  ['u-dept', 'a-dept'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = getDeptOptions('');
+  });
+}
+
+function renderDepts() {
+  const usersByDept = {}, assetsByDept = {};
+  (typeof USERS !== 'undefined' ? USERS : []).forEach(u => {
+    const d = (u.dept && u.dept !== '—') ? u.dept : '未設定';
+    usersByDept[d] = (usersByDept[d] || 0) + 1;
+  });
+  (assets || []).forEach(a => {
+    const d = a.dept || '未設定';
+    assetsByDept[d] = (assetsByDept[d] || 0) + 1;
+  });
+
+  const total = departments.length;
+  const el = document.getElementById('d-dept-total');
+  if (el) el.textContent = total;
+
+  const allUserCount = Object.values(usersByDept).reduce((s,v) => s+v, 0);
+  const allAssetCount = Object.values(assetsByDept).reduce((s,v) => s+v, 0);
+  const duEl = document.getElementById('d-dept-users');
+  const daEl = document.getElementById('d-dept-assets');
+  if (duEl) duEl.textContent = allUserCount + '名';
+  if (daEl) daEl.textContent = allAssetCount + '件';
+
+  const tbody = document.getElementById('dept-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = departments.map(d => {
+    const uc = usersByDept[d.name] || 0;
+    const ac = assetsByDept[d.name] || 0;
+    return `<tr id="drow-${d.id}">
+      <td style="color:#999;font-size:11px;">${d.id}</td>
+      <td style="font-weight:600;">${d.name}</td>
+      <td style="color:#888;">${d.desc || '—'}</td>
+      <td style="color:#888;">${d.head || '—'}</td>
+      <td><span class="tag">${uc}名</span></td>
+      <td><span class="tag">${ac}件</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn-ghost" onclick="editDept('${d.id}')">編集</button>
+        <button class="btn-ghost" style="color:var(--red);" onclick="deleteDept('${d.id}')">削除</button>
+      </td>
+    </tr>
+    <tr id="dedit-${d.id}" style="display:none;background:var(--surface2);">
+      <td colspan="7" style="padding:12px 16px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">部門名</div>
+            <input id="de-name-${d.id}" type="text" value="${d.name.replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:160px;">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">説明</div>
+            <input id="de-desc-${d.id}" type="text" value="${(d.desc||'').replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:220px;">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">責任者</div>
+            <input id="de-head-${d.id}" type="text" value="${(d.head||'').replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:130px;">
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="saveDept('${d.id}')">保存</button>
+          <button class="btn btn-sm" onclick="cancelEditDept('${d.id}')">キャンセル</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">部門が未登録です</td></tr>';
+}
+
+function submitDept() {
+  const name = document.getElementById('dept-name').value.trim();
+  if (!name) { showToast('部門名を入力してください'); return; }
+  if (departments.find(d => d.name === name)) { showToast('同名の部門が既に存在します'); return; }
+  const id = 'D-' + String(deptCounter++).padStart(3, '0');
+  departments.push({ id, name, desc: document.getElementById('dept-desc').value.trim(), head: document.getElementById('dept-head').value.trim() });
+  document.getElementById('dept-name').value = '';
+  document.getElementById('dept-desc').value = '';
+  document.getElementById('dept-head').value = '';
+  toggleFP('dept-add-form');
+  renderDepts();
+  populateDeptSel();
+  queueSave();
+  showToast('部門を追加しました');
+}
+
+function editDept(id) {
+  document.getElementById('dedit-' + id).style.display = '';
+  document.getElementById('drow-' + id).style.background = 'var(--accent-bg)';
+}
+
+function cancelEditDept(id) {
+  document.getElementById('dedit-' + id).style.display = 'none';
+  document.getElementById('drow-' + id).style.background = '';
+}
+
+function saveDept(id) {
+  const d = departments.find(x => x.id === id);
+  if (!d) return;
+  const newName = document.getElementById('de-name-' + id).value.trim();
+  if (!newName) { showToast('部門名を入力してください'); return; }
+  const oldName = d.name;
+  d.name = newName;
+  d.desc = document.getElementById('de-desc-' + id).value.trim();
+  d.head = document.getElementById('de-head-' + id).value.trim();
+  // 資産・ユーザーデータの部門名を連動更新
+  if (oldName !== newName) {
+    assets.forEach(a => { if (a.dept === oldName) a.dept = newName; });
+  }
+  cancelEditDept(id);
+  renderDepts();
+  populateDeptSel();
+  queueSave();
+  showToast('部門情報を更新しました');
+}
+
+function deleteDept(id) {
+  const d = departments.find(x => x.id === id);
+  if (!d) return;
+  if (!confirm(`部門「${d.name}」を削除しますか？\nこの部門に紐づいた資産の管理部門は「未設定」になります。`)) return;
+  assets.forEach(a => { if (a.dept === d.name) a.dept = '未設定'; });
+  departments = departments.filter(x => x.id !== id);
+  renderDepts();
+  populateDeptSel();
+  queueSave();
+  showToast('部門を削除しました');
+}
+
+// ============================================================
 // TOAST
 // ============================================================
 function showToast(msg) {
@@ -1490,6 +1674,7 @@ const RISK_TMPL = {
   ],
 };
 
+let departments = [], deptCounter = 1;
 let assets, risks, proposedRisks, riskCounter, responseCounter, filteredAssets, openDrawers, modalProposals;
 
 function initApp() {
@@ -1527,6 +1712,7 @@ function initApp() {
   filteredAssets = [...assets];
   openDrawers = new Set();
   modalProposals = [];
+  initDepts();
   renderAssets();
   renderRisks();
   initAudit();
@@ -1535,6 +1721,7 @@ function initApp() {
   initAIMS();
   updateMetrics();
   populateAsel();
+  populateDeptSel();
 }
 
 // ============================================================
@@ -1578,7 +1765,7 @@ function renderAssets() {
           <div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">機密区分</div>
             <select id="ae-cls-${a.id}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;">${clsSel}</select></div>
           <div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">管理部門</div>
-            <input id="ae-dept-${a.id}" type="text" value="${a.dept.replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:130px;"></div>
+            <select id="ae-dept-${a.id}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:130px;">${getDeptOptions(a.dept)}</select></div>
           <div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">管理担当者</div>
             <input id="ae-owner-${a.id}" type="text" value="${a.owner.replace(/"/g,'&quot;')}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:inherit;width:120px;"></div>
           <div><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;">保管場所</div>
@@ -1842,6 +2029,7 @@ function showPage(name,el){
   if(el)el.classList.add('active');
   if(name==='risk'){renderProposals();populateAsel();}
   if(name==='users'){renderUsers();}
+  if(name==='depts'){renderDepts();}
   if(name==='audit'){renderAuditPage();}
   if(name==='mgmt-review'){renderMRPage();}
   if(name==='education'){renderEducation();showEduTab('programs');}
@@ -3182,6 +3370,7 @@ async function saveAppState() {
       aiSystems, aiRisks, aiRiskCounter, aiSysCounter,
       auditYears, mrYears: mgmtReviews, mrSessionCounter, mrOutputCounter,
       eduPrograms, eduRecords, eduProgCounter, eduRecCounter,
+      departments, deptCounter,
     };
     await supabase.from('org_data').upsert({
       key: 'app_state',
@@ -3205,6 +3394,9 @@ async function loadAppState() {
     if (s.mrYears?.length)     { mgmtReviews = s.mrYears; mrSessionCounter = s.mrSessionCounter || 2; mrOutputCounter = s.mrOutputCounter || 4; renderMRYearSel(); renderMRPage(); }
     if (s.eduPrograms?.length) { eduPrograms = s.eduPrograms; eduProgCounter = s.eduProgCounter || 6; }
     if (s.eduRecords?.length)  { eduRecords = s.eduRecords; eduRecCounter = s.eduRecCounter || 6; }
+    if (s.departments?.length) { departments = s.departments; deptCounter = s.deptCounter || departments.length + 1; }
+    else { initDepts(); }
+    populateDeptSel();
     // 再描画
     renderAssets(); updateMetrics(); renderRisks();
     renderAIS(); renderAIIA(); renderAIRisk(); populateAirSysSel();
@@ -3321,6 +3513,7 @@ function exportData() {
       auditYears,
       mrYears: mgmtReviews,
       eduPrograms, eduRecords,
+      departments, deptCounter,
     }
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -3361,7 +3554,9 @@ function importData(input) {
       if (d.mrYears)        mgmtReviews   = d.mrYears;
       if (d.eduPrograms)    eduPrograms   = d.eduPrograms;
       if (d.eduRecords)     eduRecords    = d.eduRecords;
+      if (d.departments)    { departments = d.departments; deptCounter = d.deptCounter || departments.length + 1; }
       filteredAssets = [...assets];
+      populateDeptSel();
       openDrawers = new Set();
       await saveAppState();
       renderAssets(); renderRisks(); updateMetrics();
