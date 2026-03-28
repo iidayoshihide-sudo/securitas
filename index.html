@@ -547,7 +547,7 @@ _sb.auth.onAuthStateChange((event, session) => {
             <div class="ft">資産の新規登録</div>
             <div class="g2">
               <div class="fg"><label class="fl">資産名</label><input type="text" id="a-name" placeholder="例：顧客データベース"></div>
-              <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat"><option>情報・データ</option><option>ソフトウェア</option><option>ハードウェア</option><option>ネットワーク</option><option>人員・スキル</option><option>施設・設備</option></select></div>
+              <div class="fg"><label class="fl">カテゴリ</label><select id="a-cat"><option>情報</option><option>ハードウェア</option><option>ソフトウェア</option><option>ネットワーク</option><option>拠点</option><option>組織</option></select></div>
               <div class="fg"><label class="fl">機密区分</label><select id="a-cls"><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select></div>
               <div class="fg"><label class="fl">管理部門</label><select id="a-dept"><option value="">— 未設定 —</option></select></div>
               <div class="fg"><label class="fl">管理担当者</label><input type="text" id="a-owner" placeholder="例：山田 太郎"></div>
@@ -560,7 +560,7 @@ _sb.auth.onAuthStateChange((event, session) => {
             </div>
           </div>
           <div class="fb">
-            <select id="f-cat" onchange="filterA()"><option value="">カテゴリ: すべて</option><option>情報・データ</option><option>ソフトウェア</option><option>ハードウェア</option><option>ネットワーク</option><option>人員・スキル</option><option>施設・設備</option></select>
+            <select id="f-cat" onchange="filterA()"><option value="">カテゴリ: すべて</option><option>情報</option><option>ハードウェア</option><option>ソフトウェア</option><option>ネットワーク</option><option>拠点</option><option>組織</option></select>
             <select id="f-cls" onchange="filterA()"><option value="">機密区分: すべて</option><option>極秘</option><option>機密</option><option>社外秘</option><option>公開</option></select>
             <input type="text" id="f-q" placeholder="資産名で検索..." oninput="filterA()">
           </div>
@@ -1642,7 +1642,7 @@ const clsBadge={'極秘':'b-secret','機密':'b-conf','社外秘':'b-internal','
 const clsColor={'極秘':'#C0392B','機密':'#E67E22','社外秘':'#2980B9','公開':'#27AE60'};
 
 const RISK_TMPL = {
-  '情報・データ':[
+  '情報':[
     {name:'機密情報の不正漏洩',cia:'機密性',impact:5,prob:3,action:'アクセス制御の強化・暗号化の実施',iso:'A.8.2',desc:'権限のない者による情報へのアクセスや持ち出しにより機密性が損なわれるリスク'},
     {name:'情報の改ざん・破損',cia:'完全性',impact:4,prob:2,action:'バックアップの実施・変更管理プロセスの整備',iso:'A.8.3',desc:'意図的または偶発的な操作ミスによりデータの正確性・完全性が損なわれるリスク'},
     {name:'情報へのアクセス不能',cia:'可用性',impact:4,prob:2,action:'冗長化・BCP/DRPの整備',iso:'A.8.1',desc:'システム障害やランサムウェアにより必要なときに情報にアクセスできなくなるリスク'},
@@ -1663,12 +1663,12 @@ const RISK_TMPL = {
     {name:'通信の盗聴・傍受',cia:'機密性',impact:4,prob:3,action:'通信の暗号化（TLS/VPN）の徹底',iso:'A.13.2',desc:'暗号化されていない通信の盗聴による情報漏洩リスク'},
     {name:'サービス妨害攻撃（DoS/DDoS）',cia:'可用性',impact:4,prob:3,action:'DDoS対策サービスの導入・帯域冗長化',iso:'A.13.1',desc:'大量トラフィック攻撃によるサービス停止リスク'},
   ],
-  '人員・スキル':[
+  '組織':[
     {name:'内部不正・情報持ち出し',cia:'機密性',impact:5,prob:2,action:'アクセス権の最小化・退職時の権限即時抹消',iso:'A.7.2',desc:'従業員による故意の情報持ち出し・不正利用リスク'},
     {name:'フィッシング等ソーシャルエンジニアリング',cia:'機密性',impact:4,prob:3,action:'セキュリティ教育の定期実施・フィッシング訓練',iso:'A.7.2',desc:'フィッシング・なりすまし等の人的攻撃によるリスク'},
     {name:'人的ミスによる情報流出',cia:'機密性',impact:4,prob:3,action:'誤送信防止ツールの導入・操作手順書の整備',iso:'A.7.2',desc:'誤操作・誤送信等の人的ミスによる情報漏洩リスク'},
   ],
-  '施設・設備':[
+  '拠点':[
     {name:'不正入室・物理的侵入',cia:'機密性',impact:4,prob:2,action:'入退室管理システムの整備・監視カメラの設置',iso:'A.11.1',desc:'権限のない者によるサーバー室・執務エリアへの侵入リスク'},
     {name:'自然災害・設備障害',cia:'可用性',impact:5,prob:2,action:'BCP/DRP策定・代替拠点の確保',iso:'A.11.1',desc:'火災・地震・停電等によるシステム停止・データ消失リスク'},
   ],
@@ -1679,8 +1679,8 @@ let assets, risks, proposedRisks, riskCounter, responseCounter, filteredAssets, 
 
 function initApp() {
   assets = [
-    {id:'A-001',name:'顧客データベース',cat:'情報・データ',cls:'極秘',dept:'情報システム部',owner:'山田 太郎',loc:'AWS RDS',desc:'顧客の個人情報・購買履歴を格納するメインDB'},
-    {id:'A-002',name:'社員人事情報',cat:'情報・データ',cls:'極秘',dept:'人事部',owner:'佐藤 花子',loc:'社内オンプレ',desc:'社員の個人情報・給与・評価情報'},
+    {id:'A-001',name:'顧客データベース',cat:'情報',cls:'極秘',dept:'情報システム部',owner:'山田 太郎',loc:'AWS RDS',desc:'顧客の個人情報・購買履歴を格納するメインDB'},
+    {id:'A-002',name:'社員人事情報',cat:'情報',cls:'極秘',dept:'人事部',owner:'佐藤 花子',loc:'社内オンプレ',desc:'社員の個人情報・給与・評価情報'},
     {id:'A-003',name:'Active Directory',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'社内サーバー室',desc:'全社認証・権限管理システム'},
     {id:'A-004',name:'基幹業務システム',cat:'ソフトウェア',cls:'機密',dept:'情報システム部',owner:'田中 次郎',loc:'AWS EC2',desc:'受発注・在庫管理の中核システム'},
     {id:'A-005',name:'社内ネットワーク機器',cat:'ネットワーク',cls:'機密',dept:'情報システム部',owner:'鈴木 一郎',loc:'本社サーバー室',desc:'ルーター・スイッチ・ファイアウォール一式'},
@@ -1730,7 +1730,7 @@ function initApp() {
 function renderAssets() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   const tb = document.getElementById('a-tbody');
-  const catOpts = ['情報・データ','ソフトウェア','ハードウェア','ネットワーク','人員・スキル','施設・設備'].map(c=>`<option ${c==='{C}'?'selected':''}>${c}</option>`);
+  const catOpts = ['情報','ハードウェア','ソフトウェア','ネットワーク','拠点','組織'].map(c=>`<option ${c==='{C}'?'selected':''}>${c}</option>`);
   const clsOpts = ['極秘','機密','社外秘','公開'].map(c=>`<option ${c==='{L}'?'selected':''}>${c}</option>`);
   tb.innerHTML = filteredAssets.map(a => {
     const linked = risks.filter(r => r.assetId === a.id);
@@ -1740,7 +1740,7 @@ function renderAssets() {
     const actionBtns = isAdmin ? `
       <button class="btn-ghost" onclick="editAsset('${a.id}')">編集</button>
       <button class="btn-ghost" onclick="openModal('${a.id}')">＋ リスク提案</button>` : '';
-    const catSel = ['情報・データ','ソフトウェア','ハードウェア','ネットワーク','人員・スキル','施設・設備']
+    const catSel = ['情報','ハードウェア','ソフトウェア','ネットワーク','拠点','組織']
       .map(c=>`<option value="${c}"${c===a.cat?' selected':''}>${c}</option>`).join('');
     const clsSel = ['極秘','機密','社外秘','公開']
       .map(c=>`<option value="${c}"${c===a.cls?' selected':''}>${c}</option>`).join('');
