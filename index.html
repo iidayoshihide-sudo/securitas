@@ -424,6 +424,17 @@ _sb.auth.onAuthStateChange((event, session) => {
     </div>
     <button class="login-btn" onclick="doLogin()">ログイン</button>
     <div class="login-err" id="l-err"></div>
+    <div style="text-align:center;margin-top:12px;">
+      <button onclick="toggleResetForm()" style="background:none;border:none;color:#a0a0c0;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">パスワードを忘れた場合</button>
+    </div>
+    <div id="reset-form" style="display:none;margin-top:14px;border-top:1px solid rgba(255,255,255,0.1);padding-top:14px;">
+      <div class="login-field">
+        <label class="login-label">登録済みメールアドレス</label>
+        <input class="login-input" type="email" id="reset-email" placeholder="例：admin@example.com" autocomplete="email">
+      </div>
+      <button class="login-btn" onclick="sendPasswordReset()" style="background:rgba(255,255,255,0.15);">リセットメールを送信</button>
+      <div class="login-err" id="reset-err" style="text-align:center;"></div>
+    </div>
     <div id="login-diag" style="font-size:10px;color:#aaa;text-align:center;margin-top:8px;"></div>
   </div>
 </div>
@@ -3906,6 +3917,34 @@ async function checkInviteToken() {
   }
 
   await checkSession();
+}
+
+function toggleResetForm() {
+  const f = document.getElementById('reset-form');
+  const isOpen = f.style.display === 'block';
+  f.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const email = document.getElementById('l-id').value;
+    if (email) document.getElementById('reset-email').value = email;
+    document.getElementById('reset-err').textContent = '';
+  }
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('reset-email').value.trim();
+  const errEl = document.getElementById('reset-err');
+  if (!email) { errEl.textContent = 'メールアドレスを入力してください'; errEl.style.color = '#f87'; return; }
+  errEl.textContent = '送信中...'; errEl.style.color = '#a0a0c0';
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  if (error) {
+    errEl.textContent = 'エラー: ' + error.message;
+    errEl.style.color = '#f87';
+    return;
+  }
+  errEl.textContent = '✅ リセットメールを送信しました。メールを確認してください。';
+  errEl.style.color = '#7f7';
 }
 
 async function setInvitePassword() {
